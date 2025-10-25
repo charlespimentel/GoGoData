@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoGoData: Plugin para CODAP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm border border-gray-200">
+        <h1 class="text-2xl font-bold text-center text-gray-800">GoGoData Plugin</h1>
+        <p class="mt-2 text-center text-gray-600 text-sm">
+            Conecte seu GoGo Board e envie dados em tempo real para o CODAP.
+        </p>
+
+        <div class="mt-6 space-y-4">
+            <button id="connectButton"
+                class="w-full bg-blue-600 text-white font-medium py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:bg-gray-400">
+                Conectar GoGo Board
+            </button>
+            <button id="disconnectButton" disabled
+                class="w-full bg-red-600 text-white font-medium py-2.5 px-4 rounded-lg hover:bg-red-700 transition-colors duration-200 disabled:bg-gray-400">
+                Desconectar
+            </button>
+            <button id="startSendingButton" disabled
+                class="w-full bg-green-600 text-white font-medium py-2.5 px-4 rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:bg-gray-400">
+                Começar a Enviar Dados
+            </button>
+            <button id="stopSendingButton" disabled
+                class="w-full bg-yellow-500 text-white font-medium py-2.5 px-4 rounded-lg hover:bg-yellow-600 transition-colors duration-200 disabled:bg-gray-400">
+                Parar Envio
+            </button>
+        </div>
+
+        <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <strong class="text-gray-700">Status:</strong>
+            <span id="statusText" class="text-gray-500">Desconectado</span>
+        </div>
+    </div>
+
+    <!-- O CODAP-API.js será carregado quando o plugin for integrado ao CODAP -->
+    <script>
+        // O código JavaScript para o plugin pode ser inserido aqui ou em um arquivo separado.
+        // O exemplo abaixo é apenas para simular a interação da interface.
+        const connectButton = document.getElementById('connectButton');
+        const disconnectButton = document.getElementById('disconnectButton');
+        const startSendingButton = document.getElementById('startSendingButton');
+        const stopSendingButton = document.getElementById('stopSendingButton');
+        const statusText = document.getElementById('statusText');
+
+        connectButton.addEventListener('click', () => {
+            statusText.textContent = 'Conectado! Aguardando dados...';
+            connectButton.disabled = true;
+            disconnectButton.disabled = false;
+            startSendingButton.disabled = false;
+        });
+
+        disconnectButton.addEventListener('click', () => {
+            statusText.textContent = 'Desconectado';
+            connectButton.disabled = false;
+            disconnectButton.disabled = true;
+            startSendingButton.disabled = true;
+            stopSendingButton.disabled = true;
+        });
+
+        startSendingButton.addEventListener('click', () => {
+            statusText.textContent = 'Enviando dados...';
+            startSendingButton.disabled = true;
+            stopSendingButton.disabled = false;
+        });
+
+        stopSendingButton.addEventListener('click', () => {
+            statusText.textContent = 'Coleta parada';
+            startSendingButton.disabled = false;
+            stopSendingButton.disabled = true;
+        });
+    </script>
+</body>
+</html>

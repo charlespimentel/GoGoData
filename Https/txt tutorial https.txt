@@ -1,0 +1,63 @@
+===============================
+CONFIGURAÇÃO HTTPS COM MKCERT
+===============================
+
+1. Instalar o Chocolatey
+------------------------
+Abra o PowerShell como administrador e rode:
+
+Set-ExecutionPolicy Bypass -Scope Process -Force; `
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+Depois, feche e reabra o PowerShell e teste:
+choco -v
+
+
+2. Instalar o mkcert
+--------------------
+choco install mkcert -y
+
+
+3. Criar autoridade local (CA)
+------------------------------
+mkcert -install
+
+
+4. Criar certificado para localhost
+-----------------------------------
+cd C:\caminho\do\seu\projeto
+mkcert localhost
+
+Isso gera:
+ - localhost.pem
+ - localhost-key.pem
+
+
+5. Configurar o Live Server
+---------------------------
+Abra o VS Code → Ctrl + Shift + P → “Preferences: Open Settings (JSON)”
+
+Adicione:
+"liveServer.settings.https": {
+    "enable": true,
+    "cert": "C:\\User\\cabre\\Documents\\certificado\\localhost.pem",
+    "key": "C:\\User\\cabre\\Documents\\certificado\\localhost-key.pem"
+}
+
+Salve e reinicie o VS Code.
+
+
+6. Rodar o servidor
+-------------------
+Abra seu index.html → clique com o botão direito → “Open with Live Server”
+
+Seu projeto abrirá em:
+https://localhost:5500
+
+
+7. Links úteis
+--------------
+- mkcert: https://github.com/FiloSottile/mkcert
+- Chocolatey: https://chocolatey.org/
+- Live Server: https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer

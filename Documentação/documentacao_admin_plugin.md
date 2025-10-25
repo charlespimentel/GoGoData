@@ -1,0 +1,169 @@
+**DOCUMENTAÇÃO DO PLUGIN GoGoData 2.0**
+
+**1\. INTRODUÇÃO  \- VISUAL STUDIO CODE**
+
+O plugin GoGoData foi desenvolvido para integrar a GoGoBoard ao CODAP (Common Online Data Analysis Platform) via protocolo MQTT. Ele recebe dados enviados pela GoGoBoard através de um broker MQTT (HiveMQ Cloud por padrão), processa esses dados e os envia ao CODAP em tempo real. 
+
+Esse documento fornece informações técnicas destinadas ao administrador do plugin, explicando o funcionamento e como realizar ajustes caso seja necessário alterar o broker, credenciais, ou estrutura de dados. 
+
+**2\. ARQUITETURA DE DESENVOLVIMENTO E FUNCIONAMENTO** 
+
+O fluxo básico do plugin é o seguinte: 
+
+\- GoGoBoard envia dados \-\> Broker MQTT (HiveMQ Cloud) 
+
+\- Plugin (JavaScript) se conecta ao broker via MQTT 
+
+\- Plugin interpreta a mensagem recebida (tópico \+ payload) 
+
+\- Plugin cria um objeto com os dados formatados 
+
+\- Plugin envia o objeto ao CODAP via API \`codapInterface\` 
+
+\- CODAP armazena e exibe os dados em tabelas e gráficos
+
+**Nota Firmware \- Adicionar o envio da identificação da GoGo**
+
+**Implementação no CODAP**
+
+Para que o plugin funcione da forma correta é necessário:  
+	\- Usar o Live Server ou outra extensão no VScode para abrir a página na Web, essa página deve ser aberta usando HTTPS.
+
+\- Copiar o URL da página aberta e colar na importação dentro do CODAP.
+
+**3\. PRINCIPAIS COMPONENTES** 
+
+a) index.html 
+
+\- Interface do plugin no navegador. 
+
+\- Contém botão de envio de dados de teste (fake) e área de status. 
+
+\- Exibe também o log dos últimos dados enviados. 
+
+b) plugin.js 
+
+\- Responsável pela lógica principal. 
+
+\- Conecta ao broker MQTT, interpreta mensagens e envia dados ao CODAP. \- Atualiza status e exibe os dados no log. 
+
+c) Dependências 
+
+\- mqtt.min.js para conexão com o broker MQTT. 
+
+\- codap-plugin-api.js para comunicação com o CODAP. 
+
+\- iframe-phone.js para integração de plugins no CODAP. 
+
+**4\. ESTRUTURA DAS MENSAGENS**
+
+\- Tópico: plog// 
+
+\- Payload: " \=" 
+
+Exemplo: 
+
+Tópico: plog/canal/luz 
+
+Payload: "canal luz=846.00" 
+
+O plugin transforma isso em um objeto no formato: 
+
+const caseObj \= {
+
+      timestamp: "2025-09-21T15:34:10.123Z",
+
+      board: "nomeGoGo",
+
+      sensor: luz,
+
+      value: 846.00 
+
+    };
+
+Esse objeto é então enviado ao CODAP. 
+
+**5\. AJUSTES PELO ADMINISTRADOR** 
+
+a) Alterar Broker MQTT 
+
+No arquivo \`plugin.js\`, localize: 
+
+const brokerUrl \= "wss://8fd355c882c742e8ae7574928547840b.s1.eu.hivemq.cloud:8884/mqtt";
+
+Substitua pelo endpoint do novo broker (precisa ser wss:// para funcionar em páginas HTTPS). 
+
+![][image1]
+
+b) Alterar Credenciais 
+
+No mesmo arquivo, localize o objeto \`options\` e ajuste \`username\` e \`password\`. 
+
+const options \= {
+
+  username: "admin",
+
+  password: "Gogoboard\!1",
+
+  clean: true,
+
+  connectTimeout: 2000,
+
+  reconnectPeriod: 1000 *// tenta reconectar a cada 1s*
+
+};
+
+c) Ajustar Tópicos 
+
+Atualmente inscrito em \`plog/\#\`. Modifique a linha \`client.subscribe(...)\` para tópicos específicos. 
+
+client.on("connect", () \=\> {
+
+  console.log("✅ Conectado ao HiveMQ Cloud\!");
+
+  client.subscribe("plog/\#", (err) \=\> {
+
+    if (\!err) {
+
+      setStatusIndicator("green");
+
+      console.log("📡 Inscrito em plog/\#");
+
+    } else {
+
+      console.error("Erro ao se inscrever:", err);
+
+    }
+
+  });
+
+});
+
+d) Modificar Estrutura de Dados 
+
+Caso o firmware da GoGoBoard envie mensagens em outro formato, será necessário ajustar a função \`client.on("message", ...)\`. O administrador deve garantir que o parser converta a mensagem recebida em um objeto com as chaves: timestamp, board, sensor, value. 
+
+**6\. MONITORAMENTO E LOGS** 
+
+O console do navegador (DevTools) exibe mensagens detalhadas sobre: \- Conexão com o broker 
+
+\- Mensagens recebidas 
+
+\- Dados enviados ao CODAP  
+O HTML exibe um indicador visual de status (verde/vermelho) e os últimos dados enviados. 
+
+**7\. CONSIDERAÇÕES FINAIS** 
+
+O administrador deve se atentar a três pontos principais: 
+
+1\. O broker precisa estar acessível via WSS (não é permitido WS simples em páginas HTTPS). 
+
+2\. As credenciais precisam ser válidas no servidor MQTT. 
+
+3\. O formato da mensagem precisa ser compatível com o parser implementado no plugin. 
+
+4\. O botão de dados Fake pode ser utilizado para teste de conexões e outras funcionalidades, já que o próprio plugin gera os dados enviados
+
+Com esses cuidados, o plugin funcionará corretamente para integrar dados da GoGoBoard ao CODAP.
+
+[image1]: <data:image/png;base64,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>

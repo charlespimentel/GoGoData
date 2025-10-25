@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GoGoData: Plugin para CODAP</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        .status { margin-top: 10px; padding: 10px; border: 1px solid #ccc; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GoGoData Plugin</h1>
+        <p>Conecte seu GoGo Board e envie dados em tempo real para o CODAP.</p>
+        <button id="connectButton">Conectar GoGo Board</button>
+        <button id="disconnectButton" disabled>Desconectar</button>
+        <button id="startSendingButton" disabled>Começar a Enviar Dados</button>
+        <button id="stopSendingButton" disabled>Parar Envio</button>
+        <div class="status">
+            <strong>Status:</strong> <span id="statusText">Desconectado</span>
+        </div>
+    </div>
+
+    <script src="https://codap.concord.org/releases/latest/codap-api.js"></script>
+    <script src="gogodata-plugin.js"></script>
+</body>
+</html>
