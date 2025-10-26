@@ -1,0 +1,103 @@
+﻿DOCUMENTAÇÃO DO PLUGIN GoGoData 2.0
+1. INTRODUÇÃO  - VISUAL STUDIO CODE
+O plugin GoGoData foi desenvolvido para integrar a GoGoBoard ao CODAP (Common Online Data Analysis Platform) via protocolo MQTT. Ele recebe dados enviados pela GoGoBoard através de um broker MQTT (HiveMQ Cloud por padrão), processa esses dados e os envia ao CODAP em tempo real. 
+Esse documento fornece informações técnicas destinadas ao administrador do plugin, explicando o funcionamento e como realizar ajustes caso seja necessário alterar o broker, credenciais, ou estrutura de dados. 
+2. ARQUITETURA DE DESENVOLVIMENTO E FUNCIONAMENTO 
+O fluxo básico do plugin é o seguinte: 
+- GoGoBoard envia dados -> Broker MQTT (HiveMQ Cloud) 
+- Plugin (JavaScript) se conecta ao broker via MQTT 
+- Plugin interpreta a mensagem recebida (tópico + payload) 
+- Plugin cria um objeto com os dados formatados 
+- Plugin envia o objeto ao CODAP via API `codapInterface` 
+- CODAP armazena e exibe os dados em tabelas e gráficos
+
+
+Nota Firmware - Adicionar o envio da identificação da GoGo
+
+Implementação no CODAP
+Para que o plugin funcione da forma correta é necessário:
+        - Usar o Live Server ou outra extensão no VScode para abrir a página na Web, essa página deve ser aberta usando HTTPS.
+- Copiar o URL da página aberta e colar na importação dentro do CODAP.
+3. PRINCIPAIS COMPONENTES 
+a) index.html 
+- Interface do plugin no navegador. 
+- Contém botão de envio de dados de teste (fake) e área de status. 
+- Exibe também o log dos últimos dados enviados. 
+b) plugin.js 
+- Responsável pela lógica principal. 
+- Conecta ao broker MQTT, interpreta mensagens e envia dados ao CODAP. - Atualiza status e exibe os dados no log. 
+c) Dependências 
+- mqtt.min.js para conexão com o broker MQTT. 
+- codap-plugin-api.js para comunicação com o CODAP. 
+- iframe-phone.js para integração de plugins no CODAP. 
+4. ESTRUTURA DAS MENSAGENS
+
+
+- Tópico: plog// 
+- Payload: " =" 
+Exemplo: 
+Tópico: plog/canal/luz 
+Payload: "canal luz=846.00" 
+O plugin transforma isso em um objeto no formato: 
+const caseObj = {
+      timestamp: "2025-09-21T15:34:10.123Z",
+      board: "nomeGoGo",
+      sensor: luz,
+      value: 846.00 
+    };
+Esse objeto é então enviado ao CODAP. 
+5. AJUSTES PELO ADMINISTRADOR 
+a) Alterar Broker MQTT 
+No arquivo `plugin.js`, localize: 
+const brokerUrl = "wss://8fd355c882c742e8ae7574928547840b.s1.eu.hivemq.cloud:8884/mqtt";
+Substitua pelo endpoint do novo broker (precisa ser wss:// para funcionar em páginas HTTPS). 
+
+
+
+
+  
+
+
+
+b) Alterar Credenciais 
+No mesmo arquivo, localize o objeto `options` e ajuste `username` e `password`. 
+const options = {
+  username: "admin",
+  password: "Gogoboard!1",
+  clean: true,
+  connectTimeout: 2000,
+  reconnectPeriod: 1000 // tenta reconectar a cada 1s
+};
+
+
+
+
+c) Ajustar Tópicos 
+Atualmente inscrito em `plog/#`. Modifique a linha `client.subscribe(...)` para tópicos específicos. 
+client.on("connect", () => {
+  console.log("✅ Conectado ao HiveMQ Cloud!");
+  client.subscribe("plog/#", (err) => {
+    if (!err) {
+      setStatusIndicator("green");
+      console.log("📡 Inscrito em plog/#");
+    } else {
+      console.error("Erro ao se inscrever:", err);
+    }
+  });
+});
+
+
+d) Modificar Estrutura de Dados 
+Caso o firmware da GoGoBoard envie mensagens em outro formato, será necessário ajustar a função `client.on("message", ...)`. O administrador deve garantir que o parser converta a mensagem recebida em um objeto com as chaves: timestamp, board, sensor, value. 
+6. MONITORAMENTO E LOGS 
+O console do navegador (DevTools) exibe mensagens detalhadas sobre: - Conexão com o broker 
+- Mensagens recebidas 
+- Dados enviados ao CODAP
+O HTML exibe um indicador visual de status (verde/vermelho) e os últimos dados enviados. 
+7. CONSIDERAÇÕES FINAIS 
+O administrador deve se atentar a três pontos principais: 
+1. O broker precisa estar acessível via WSS (não é permitido WS simples em páginas HTTPS). 
+2. As credenciais precisam ser válidas no servidor MQTT. 
+3. O formato da mensagem precisa ser compatível com o parser implementado no plugin. 
+4. O botão de dados Fake pode ser utilizado para teste de conexões e outras funcionalidades, já que o próprio plugin gera os dados enviados
+Com esses cuidados, o plugin funcionará corretamente para integrar dados da GoGoBoard ao CODAP.
