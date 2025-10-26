@@ -181,7 +181,7 @@ async function initCodapIfAvailable() {
     });
 
     codapReady = true;
-    updateStatus("GoGo Board conectada ao CODAP");
+    updateStatus("GoGoBoard-CODAP");
     flushCodapQueue();
   } catch (e) {
     console.error("Erro inicializando codapInterface ou criando dataContext:", e);
