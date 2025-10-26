@@ -66,11 +66,6 @@ const options = {
 2. Após a conexão, o plugin cria o *dataContext* `GoGoBoardData` com a coleção `leituras` e atributos necessários.
 3. Caso o CODAP ainda não esteja pronto, as mensagens ficam armazenadas em `codapSendQueue` e são reenviadas ao CODAP quando a conexão for concluída.
 
-## Testes com dados fictícios
-
-- Utilize o botão **🧪 Enviar Dados** para gerar cinco leituras simuladas em intervalos de 2 segundos.
-- As leituras aparecem no log da interface e são enviadas ao CODAP, permitindo validar a configuração sem depender do hardware.
-
 ## Documentação adicional
 
 Consulte a pasta `Documentação/` para detalhes do fluxo de desenvolvimento, ajustes administrativos do plugin e orientações para manutenção do broker MQTT e do firmware da GoGoBoard.
