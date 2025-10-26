@@ -40,10 +40,10 @@ O plugin é executado dentro de um iframe no CODAP e se conecta a um broker MQTT
 Os parâmetros de conexão podem ser ajustados no arquivo `V2.0 (Final)/plugin.js`:
 
 ```javascript
-const brokerUrl = "wss://38543d8f57c14b2f8ef0c5c4e3130977.s1.eu.hivemq.cloud:8884/mqtt";
+const brokerUrl = "wss://********************************.s1.eu.hivemq.cloud:8884/mqtt";
 const options = {
-  username: "admin",
-  password: "Gogoboard!1",
+  username: "*****",
+  password: "*****",
   clean: true,
   connectTimeout: 2000,
   reconnectPeriod: 1000
