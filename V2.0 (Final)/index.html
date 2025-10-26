@@ -27,18 +27,38 @@
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
   <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-sm border border-gray-200">
     <h1 class="text-2xl font-bold text-center text-gray-800">GoGoData Plugin</h1>
+    <div class="flex justify-center items-center mt-4 space-x-6">
+    <img src="greco.png" alt="GRECO - UFRJ" class="h-10 object-contain">
+    <img src="tltl.png" alt="TLTL - Columbia University" class="h-12 object-contain">
+    </div>
     <p class="mt-2 text-center text-gray-600 text-sm">
       Conecte sua GoGoBoard via Rede e envie dados para o CODAP.
     </p>
 
     <!-- Botões -->
+    <!--
     <div class="mt-6 space-y-4">
-      <!-- Botão de teste fake -->
+      // Botão de teste fake desativado
       <button id="sendFakeButton"
         class="w-full bg-purple-600 text-white font-medium py-2.5 px-4 rounded-lg hover:bg-purple-700 transition-colors duration-200 mt-4">
-        🧪 Enviar Dados 
+        🧪 Enviar Dados Fake 
       </button>
     </div>
+    -->
+
+    <!-- 26 de outubro Controles de Coleta -->
+<div class="mt-6 space-x-4 flex justify-center">
+  <button id="startButton"
+    class="bg-green-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-green-700 transition-colors duration-200">
+    ▶️ Iniciar Coleta
+  </button>
+
+  <button id="stopButton"
+    class="bg-red-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-red-700 transition-colors duration-200">
+    ⏹️ Parar Coleta
+  </button>
+</div>
+
 
     <!-- Status -->
     <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 flex items-center space-x-2">

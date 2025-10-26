@@ -1,16 +1,24 @@
 // plugin.js (versão adaptada com log visual de dados enviados)
 
 const statusText = document.getElementById("statusText");
+
+// ---Teste Fake Parte 1---
+/*
 const fakeBtn = document.getElementById("sendFakeButton");
+*/
+
 const indicator = document.getElementById("statusIndicator");
 
 let codapReady = false;
+
+// --- Controle de coleta ---
+let collecting = false; // 26 de outubro define se os dados serão enviados ao CODAP
 
 // fila para casos que chegam antes do codapInterface estar pronto
 const codapSendQueue = [];
 
 // Broker MQTT (HiveMQ Cloud)
-const brokerUrl = "wss://38543d8f57c14b2f8ef0c5c4e3130977.s1.eu.hivemq.cloud:8884/mqtt";
+const brokerUrl = "wss://8fd355c882c742e8ae7574928547840b.s1.eu.hivemq.cloud:8884/mqtt";
 
 const options = {
   username: "admin",
@@ -44,6 +52,14 @@ client.on("error", (err) => {
 client.on("message", (topic, message) => {
   const payload = message.toString().trim();
   console.log(`Mensagem recebida de ${topic}:`, payload);
+
+  // 26 de outubro Se a coleta estiver desativada, ignora as mensagens
+  if (!collecting) {
+    console.log("⏸️ Coleta pausada — mensagem ignorada");
+    return;
+  }
+
+
 
   // Extrair dados GoGo (formato: "nomeGoGo luz=846.00")
   const parts = topic.split("/");
@@ -138,7 +154,7 @@ async function initCodapIfAvailable() {
       name: "GoGoData",
       title: "Dados GoGoBoard",
       version: "1.2",
-      dimensions: { width: 400, height: 300 },
+      dimensions: { width: 420, height: 400 },
       preventDataContextReorg: false
     });
 
@@ -165,7 +181,7 @@ async function initCodapIfAvailable() {
     });
 
     codapReady = true;
-    updateStatus("CODAP detectado e dataset pronto");
+    updateStatus("GoGo Board conectada ao CODAP");
     flushCodapQueue();
   } catch (e) {
     console.error("Erro inicializando codapInterface ou criando dataContext:", e);
@@ -205,6 +221,32 @@ function flushCodapQueue() {
   updateStatus("Fila enviada ao CODAP");
 }
 
+
+// --- 26 de outubroBotões de controle de coleta ---
+const startBtn = document.getElementById("startButton");
+const stopBtn = document.getElementById("stopButton");
+
+if (startBtn && stopBtn) {
+  startBtn.addEventListener("click", () => {
+    collecting = true;
+    updateStatus("Coleta iniciada");
+    setStatusIndicator("green");
+    console.log("▶️ Coleta iniciada");
+  });
+
+  stopBtn.addEventListener("click", () => {
+    collecting = false;
+    updateStatus("Coleta interrompida");
+    setStatusIndicator("red");
+    console.log("⏹️ Coleta interrompida");
+  });
+}
+
+
+// ---Teste Fake Parte 2---
+
+/*
+
 // --- lógica fake (botão de teste) ---
 fakeBtn.addEventListener("click", () => {
   updateStatus("Iniciando teste fake (5 leituras, 2s)...");
@@ -229,6 +271,8 @@ fakeBtn.addEventListener("click", () => {
     }
   }, 2000);
 });
+
+*/
 
 // ----------------- inicialização -----------------
 (async function boot() {
