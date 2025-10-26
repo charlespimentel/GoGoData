@@ -18,7 +18,7 @@ let collecting = false; // 26 de outubro define se os dados serão enviados ao C
 const codapSendQueue = [];
 
 // Broker MQTT (HiveMQ Cloud)
-const brokerUrl = "wss://8fd355c882c742e8ae7574928547840b.s1.eu.hivemq.cloud:8884/mqtt";
+const brokerUrl = "wss://97b1be8c4f87478a93468f5795d02a96.s1.eu.hivemq.cloud:8884/mqtt";
 
 const options = {
   username: "admin",
