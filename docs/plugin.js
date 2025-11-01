@@ -1,10 +1,25 @@
 /* Plugin CODAP GoGoBoard – versão estável 2025-11-01
-   - Sem opção "Todas"
+   - Corrige “Unknown Game”
+   - Mantém compatibilidade completa com CODAP e MQTT
    - Nomes amigáveis (Protótipo #1–#6)
    - Tamanho fixo no CODAP (720×520)
 */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // --- Registro no CODAP (corrige "Unknown Game") ---
+  try {
+    await codapInterface.init({
+      name: "GoGoData",
+      title: "GoGoData - GRECO/TLTL/TLIC",
+      version: "2.0",
+      dimensions: { width: 720, height: 520 },
+      preventDataContextReorg: true
+    });
+    console.log("✅ Plugin GoGoData registrado corretamente no CODAP.");
+  } catch (err) {
+    console.warn("⚠️ Erro ao registrar no CODAP:", err);
+  }
+
   // --- Configurações MQTT ---
   const clientId = "gogodata-" + Math.random().toString(16).substr(2, 8);
   const mqttBroker = "wss://97b1be8c4f87478a93468f5795d02a96.s1.eu.hivemq.cloud:8884/mqtt";
@@ -34,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Estado interno ---
   let client;
   let collecting = false;
-  let codapConnected = false;
+  let codapConnected = true; // já conectado após init
   let dataContextCreated = false;
   let dataBuffer = {};
   let sendTimer = {};
@@ -82,18 +97,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function sendToCODAP(data) {
     try {
-      // Inicializa conexão CODAP se necessário
-      if (!codapConnected && typeof codapInterface !== "undefined") {
-        codapInterface.init({
-          name: "GoGoData Plugin",
-          title: "GoGoData Plugin",
-          version: "2.0",
-          dimensions: { width: 720, height: 520 },
-          preventDataContextReorg: true // evita redimensionamento
-        });
-        codapConnected = true;
-      }
-
       // Cria o Data Context na primeira execução
       if (codapConnected && !dataContextCreated) {
         const attributeNames = Object.keys(data).filter(key => key !== "timestamp" && key !== "board");
@@ -204,6 +207,7 @@ document.addEventListener("DOMContentLoaded", () => {
   connectMQTT();
   updateStatus("Aguardando conexão...");
 });
+
 
 
 
