@@ -1,19 +1,19 @@
-/* Plugin CODAP GoGoBoard – Versão Definitiva (Usando HiveMQ Cloud com Credenciais) */
+/* Plugin CODAP GoGoBoard – Versão Definitiva (Coleta Acionada pelo Menu Suspenso) */
 
 document.addEventListener("DOMContentLoaded", () => {
     // --- Configurações Iniciais ---
     const clientId = "gogodata-" + Math.random().toString(16).substr(2, 8);
-    // NOVO ENDEREÇO DO BROKER FORNECIDO PELO USUÁRIO
     const mqttBroker = "wss://97b1be8c4f87478a93468f5795d02a96.s1.eu.hivemq.cloud:8884/mqtt";
     const topic = "plog/gogodata/#";
     
-    // NOVAS CREDENCIAIS
+    // CREDENCIAIS
     const mqttUsername = "admin";
     const mqttPassword = "@Gogoboard1";
 
     // --- Variáveis de Estado ---
     let client;
-    let collecting = false;
+    let collecting = false; // Controla se a coleta para a placa SELECIONADA está ativa
+    let selectedBoardForCollection = null; // A placa atualmente selecionada para enviar dados ao CODAP
     let codapConnected = false;
     let dataContextCreated = false; 
     let boards = new Set();
@@ -34,7 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("[STATUS]", msg);
     }
 
-    // FUNÇÃO PARA ADICIONAR PLACAS AO SELECT (Usando DOM nativo: createElement + appendChild)
     function updateBoardList(boardName) {
         if (boardName && boardName.startsWith("GoGo-") && !boards.has(boardName)) {
             boards.add(boardName);
@@ -43,10 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
             option.value = boardName;
             option.textContent = boardName;
             
-            // Adiciona o elemento ao final do select (após 'Todas')
             boardSelect.appendChild(option); 
             
-            console.log("🧩 Nova GoGoBoard detectada e adicionada:", boardName);
+            console.log(`🧩 Nova GoGoBoard detectada e adicionada: ${boardName}. Total: ${boards.size} placas.`);
         }
     }
 
@@ -77,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // --- Funções de Comunicação CODAP ---
+    // --- Funções de Comunicação CODAP (Inalteradas) ---
 
     function sendCaseToCODAP(data) {
         if (codapConnected && dataContextCreated) {
@@ -145,20 +143,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // --- Comunicação MQTT (AJUSTADA) ---
+    // --- Comunicação MQTT ---
 
     function connectMQTT() {
-        // Inclui as credenciais na conexão
         client = mqtt.connect(mqttBroker, { 
             clientId: clientId,
-            username: mqttUsername, // Usuário
-            password: mqttPassword  // Senha
+            username: mqttUsername, 
+            password: mqttPassword  
         });
         updateStatus("Conectando ao broker privado...");
 
         client.on("connect", () => {
             console.log("✅ Conectado ao broker HiveMQ Cloud");
-            updateStatus("Conectado e autenticado. Aguardando dados...");
+            updateStatus("Conectado. Escolha uma placa para coletar dados.");
             client.subscribe(topic);
         });
 
@@ -169,24 +166,30 @@ document.addEventListener("DOMContentLoaded", () => {
             const boardName = parts[2];
             const sensorName = parts[3];
 
-            // 1. Verifica e Adiciona Placa
-            if (!boardName || !sensorName || !boardName.startsWith("GoGo-")) return;
-            updateBoardList(boardName); 
+            // 1. A ÚNICA FUNÇÃO IMEDIATA: IDENTIFICAR E ADICIONAR A PLACA
+            if (boardName && boardName.startsWith("GoGo-")) {
+                updateBoardList(boardName); 
+            }
+            
+            // Verifica se a extração do nome da placa e do sensor foi bem-sucedida
+            if (!boardName || !sensorName || !boardName.startsWith("GoGo-")) {
+                return;
+            }
+            
+            // 2. EXTRAÇÃO DE VALOR E FILTRAGEM DE COLETAS
+            
+            // Se não estiver coletando, ou a placa não for a selecionada, apenas processamos a detecção e saímos.
+            if (!collecting || boardName !== selectedBoardForCollection) return; 
 
-            // 2. Extrai o valor e verifica se deve coletar
             const valueMatch = payload.match(/=([\d.]+)/);
             const value = valueMatch ? parseFloat(valueMatch[1]) : null;
-            if (value === null || !collecting) return;
+            if (value === null) return;
 
-            // 3. Filtra pela placa selecionada
-            const selectedBoard = boardSelect.value;
-            if (selectedBoard !== "" && selectedBoard !== "Todas" && boardName !== selectedBoard) return;
-
-            // 4. Armazena o valor no buffer
+            // 3. Armazena o valor no buffer da placa ATIVA
             if (!dataBuffer[boardName]) dataBuffer[boardName] = {};
             dataBuffer[boardName][sensorName] = value;
 
-            // 5. Lógica de Agrupamento com Timer
+            // 4. Lógica de Agrupamento com Timer (Para enviar um caso completo da placa selecionada)
             if (sendTimer[boardName]) {
                 clearTimeout(sendTimer[boardName]);
             }
@@ -200,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 sendToCODAP(caseObj);
                 logData(caseObj);
-                updateStatus("Coleta ativa...");
+                updateStatus(`Coleta ativa: ${selectedBoardForCollection}...`);
 
                 delete dataBuffer[boardName];
                 delete sendTimer[boardName];
@@ -211,7 +214,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         client.on("error", (err) => {
             console.error("❌ Erro MQTT:", err);
-            // Mensagem de status mais útil em caso de falha de conexão ou autenticação
             updateStatus("Erro na conexão MQTT. Verifique as credenciais ou o endereço."); 
         });
 
@@ -222,16 +224,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- Event Listeners e Inicialização ---
 
+    // 🎯 NOVO TRIGGER: MUDANÇA NO MENU SUSPENSO
+    boardSelect.addEventListener("change", () => {
+        const newSelection = boardSelect.value;
+        
+        if (newSelection === "" || newSelection === "Todas") {
+            // Se 'Todas' ou vazio, para a coleta
+            collecting = false;
+            selectedBoardForCollection = null;
+            updateStatus("Escolha uma placa específica para iniciar a coleta.");
+        } else {
+            // Se uma placa específica for escolhida, define-a como alvo
+            selectedBoardForCollection = newSelection;
+            
+            // Inicia a coleta
+            collecting = true;
+            updateStatus(`Coleta da placa ${selectedBoardForCollection} iniciada.`);
+            console.log(`▶️ Coleta iniciada para a placa: ${selectedBoardForCollection}`);
+        }
+    });
+
+    // BOTÕES: AGORA SERVEM APENAS PARA PAUSAR/REINICIAR A PLACA JÁ SELECIONADA
     startBtn.addEventListener("click", () => {
+        if (!selectedBoardForCollection) {
+            updateStatus("ERRO: Selecione uma placa no menu suspenso primeiro.");
+            return;
+        }
         collecting = true;
-        updateStatus("Coleta iniciada...");
-        console.log("▶️ Coleta iniciada");
+        updateStatus(`Coleta REINICIADA: ${selectedBoardForCollection}.`);
+        console.log(`▶️ Coleta reiniciada para a placa: ${selectedBoardForCollection}`);
     });
 
     stopBtn.addEventListener("click", () => {
+        if (!selectedBoardForCollection) {
+            updateStatus("Coleta pausada (Nenhuma placa selecionada).");
+            return;
+        }
         collecting = false;
-        updateStatus("Coleta pausada.");
-        console.log("⏹️ Coleta pausada");
+        updateStatus(`Coleta PAUSADA: ${selectedBoardForCollection}.`);
+        console.log(`⏹️ Coleta pausada para a placa: ${selectedBoardForCollection}`);
     });
 
     // Inicialização
