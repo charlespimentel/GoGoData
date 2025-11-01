@@ -1,4 +1,4 @@
-/* Plugin CODAP GoGoBoard – versão funcional com detecção automática */
+/* Plugin CODAP GoGoBoard – versão final (detecção real de placas via MQTT) */
 
 document.addEventListener("DOMContentLoaded", () => {
   const clientId = "gogodata-" + Math.random().toString(16).substr(2, 8);
@@ -11,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let boards = new Set();
   let dataBuffer = {};
 
-  // Elementos do DOM
   const statusEl = document.getElementById("status");
   const boardSelect = document.getElementById("boardSelect");
   const startBtn = document.getElementById("startBtn");
@@ -45,22 +44,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     client.on("message", (topic, message) => {
       const payload = message.toString().trim();
-      console.log("📡 Recebido:", topic, payload);
+      console.log("📡 Mensagem recebida:", topic, payload);
 
       const parts = topic.split("/");
       const boardName = parts[2] || "unknown";
       const sensorName = parts[3] || "unknown";
 
-      updateBoardList(boardName); // adiciona ao seletor
+      if (boardName && boardName.startsWith("GoGo-")) {
+        updateBoardList(boardName);
+      }
 
       const valueMatch = payload.match(/=([\d.]+)/);
       const value = valueMatch ? parseFloat(valueMatch[1]) : null;
       if (value === null) return;
 
-      if (!collecting) {
-        console.log("⏸️ Coleta pausada — mensagem ignorada");
-        return;
-      }
+      if (!collecting) return;
 
       const selectedBoard = boardSelect.value;
       if (selectedBoard !== "" && selectedBoard !== "Todas" && boardName !== selectedBoard) return;
