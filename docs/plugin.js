@@ -1,7 +1,7 @@
 /* Plugin CODAP GoGoBoard – versão estável 2025-11-01
    - Corrige “Unknown Game”
    - Mantém compatibilidade completa com CODAP e MQTT
-   - Nomes amigáveis (Protótipo #1–#6)
+   - Nomes amigáveis (Microcontrolador #1–#6)
    - Tamanho fixo no CODAP (720×520)
 */
 
@@ -38,12 +38,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // --- Sinônimos das placas ---
   const boardAliases = {
-    "GoGo-99A5FCE8": "Protótipo #1",
-    "GoGo-0C47ED10": "Protótipo #2",
-    "GoGo-99A5FCBB": "Protótipo #3",
-    "GoGo-99A5FCCC": "Protótipo #4",
-    "GoGo-99A5FCDD": "Protótipo #5",
-    "GoGo-99A5FCEE": "Protótipo #6"
+    "GoGo-99A5FCE8": "Microcontrolador #1",
+    "GoGo-0C47ED10": "Microcontrolador #2",
+    "GoGo-99A5FCBB": "Microcontrolador #3",
+    "GoGo-99A5FCCC": "Microcontrolador #4",
+    "GoGo-99A5FCDD": "Microcontrolador #5",
+    "GoGo-99A5FCEE": "Microcontrolador #6"
   };
 
   // --- Estado interno ---
