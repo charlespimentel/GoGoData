@@ -14,8 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
     username: "admin",
     password: "@Gogoboard1",
     clean: true,
-    connectTimeout: 1000,
-    reconnectPeriod: 500,
+    connectTimeout: 4000,
+    reconnectPeriod: 1000,
     protocolVersion: 4,
     rejectUnauthorized: false,
     keepalive: 60
@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
         codapInterface.init({
           name: "GoGoData Plugin",
           title: "GoGoData Plugin",
-          dimensions: { width: 1000, height: 720 },
+          dimensions: { width: 850, height: 500 },
           version: "2.0"
         });
         codapConnected = true;
