@@ -17,43 +17,43 @@
     body {
       font-family: 'Inter', sans-serif;
       background-color: #f8f9fb;
-      overflow-y: auto; /* garante scroll interno */
+      overflow-y: auto;
     }
     #dadosEnviados div {
-      margin-bottom: 2px;
+      margin-bottom: 1px;
     }
     #status-message {
       display: inline-block;
-      margin-left: 4px;
+      margin-left: 3px;
     }
   </style>
 </head>
 
-<body class="flex items-center justify-center min-h-screen p-4">
-  <div class="bg-white p-5 rounded-2xl shadow-md w-full max-w-lg border border-gray-200 overflow-y-auto max-h-[700px]">
+<body class="flex items-center justify-center min-h-screen p-2">
+  <div class="bg-white p-4 rounded-xl shadow-md w-full max-w-md border border-gray-200 overflow-y-auto max-h-[560px]">
     
-    <h1 class="text-lg font-semibold text-center text-gray-800 mb-1">
+    <h1 class="text-base font-semibold text-center text-gray-800 mb-1">
       GoGoData - GRECO/TLTL/TLIC
     </h1>
 
-    <p class="text-sm text-center text-gray-600 mb-3">
+    <p class="text-xs text-center text-gray-600 mb-2">
       Conecte sua GoGoBoard e receba os dados em tempo real.
     </p>
 
-    <div class="flex justify-center items-center mb-3 space-x-4">
-      <img src="greco.png" alt="GRECO - UFRJ" class="h-8 object-contain">
-      <img src="tltl.png" alt="TLTL - Columbia University" class="h-9 object-contain">
+    <div class="flex justify-center items-center mb-2 space-x-3">
+      <img src="greco.png" alt="GRECO - UFRJ" class="h-6 object-contain">
+      <img src="tltl.png" alt="TLTL - Columbia University" class="h-7 object-contain">
     </div>
 
-    <div class="bg-white p-4 rounded-xl shadow-sm w-full border border-gray-100">
-      <h2 class="text-base font-semibold text-center text-gray-800 mb-2">
+    <div class="bg-white p-3 rounded-lg shadow-sm w-full border border-gray-100">
+      <h2 class="text-sm font-semibold text-center text-gray-800 mb-1">
         Selecione sua GoGoBoard
       </h2>
 
-      <label for="boardSelect" class="block text-sm font-medium text-gray-700 mb-1">
+      <label for="boardSelect" class="block text-xs font-medium text-gray-700 mb-1">
         Placa conectada:
       </label>
-      <select id="boardSelect" class="mb-2 p-2 border border-gray-300 rounded w-full text-sm">
+      <select id="boardSelect" class="mb-2 p-1.5 border border-gray-300 rounded w-full text-xs">
         <option value="">Selecione sua placa</option>
         <option value="GoGo-99A5FCE8">Protótipo #1</option>
         <option value="GoGo-0C47ED10">Protótipo #2</option>
@@ -63,21 +63,21 @@
         <option value="GoGo-99A5FCEE">Protótipo #6</option>
       </select>
 
-      <div class="flex justify-center gap-2 mb-2">
-        <button id="startBtn" class="bg-green-600 text-white px-4 py-1.5 rounded hover:bg-green-700 text-sm">
-          ▶ Iniciar Coleta
+      <div class="flex justify-center gap-2 mb-1">
+        <button id="startBtn" class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-xs">
+          ▶ Iniciar
         </button>
-        <button id="stopBtn" class="bg-red-600 text-white px-4 py-1.5 rounded hover:bg-red-700 text-sm">
-          ■ Parar Coleta
+        <button id="stopBtn" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-xs">
+          ■ Parar
         </button>
       </div>
 
-      <div class="text-sm bg-gray-50 p-1.5 rounded border border-gray-200 mb-2">
+      <div class="text-xs bg-gray-50 p-1 rounded border border-gray-200 mb-1">
         <strong>Status:</strong> <span id="status-message">Aguardando conexão...</span>
       </div>
 
       <div id="dadosEnviados" 
-        class="text-xs bg-gray-50 border border-gray-200 rounded p-2 h-24 overflow-y-auto leading-tight">
+        class="text-[11px] bg-gray-50 border border-gray-200 rounded p-1 h-20 overflow-y-auto leading-tight">
         <b>Dados enviados:</b>
       </div>
     </div>
