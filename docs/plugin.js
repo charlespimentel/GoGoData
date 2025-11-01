@@ -14,8 +14,8 @@ document.addEventListener("DOMContentLoaded", () => {
     username: "admin",
     password: "@Gogoboard1",
     clean: true,
-    connectTimeout: 4000,
-    reconnectPeriod: 1000,
+    connectTimeout: 2000,
+    reconnectPeriod: 700,
     protocolVersion: 4,
     rejectUnauthorized: false,
     keepalive: 60
