@@ -10,11 +10,13 @@ let codapConnected = false;
 let boards = new Set();
 let dataBuffer = {}; // Armazena leituras temporárias por placa
 
+// Referências a elementos do DOM
 const statusEl = document.getElementById("status");
 const boardSelect = document.getElementById("boardSelect");
 
 function updateStatus(msg) {
-  statusEl.textContent = "Status: " + msg;
+  if (statusEl) statusEl.textContent = "Status: " + msg;
+  console.log("[STATUS]", msg);
 }
 
 function updateBoardList(boardName) {
@@ -45,32 +47,39 @@ function connectMQTT() {
     });
   });
 
+  // Recebimento de mensagens MQTT
   client.on("message", (topic, message) => {
     const payload = message.toString().trim();
     console.log("📡 Recebido bruto:", topic, payload);
 
+    // Divide o tópico para extrair GoGoBoard e sensor
+    const parts = topic.split("/");
+    const boardName = parts[2] || "unknown";
+    const sensorName = parts[3] || "unknown";
+
+    // Sempre registra a placa (mesmo se coleta estiver pausada)
+    updateBoardList(boardName);
+
+    // Extrai o valor numérico do payload
+    const valueMatch = payload.match(/=([\d.]+)/);
+    const value = valueMatch ? parseFloat(valueMatch[1]) : null;
+    if (value === null) return;
+
+    // Se coleta estiver pausada, apenas atualiza lista e ignora valores
     if (!collecting) {
       console.log("⏸️ Coleta pausada — mensagem ignorada");
       return;
     }
 
-    const parts = topic.split("/");
-    const boardName = parts[2] || "unknown";
-    const sensorName = parts[3] || "unknown";
-
-    const valueMatch = payload.match(/=([\d.]+)/);
-    const value = valueMatch ? parseFloat(valueMatch[1]) : null;
-    if (value === null) return;
-
-    updateBoardList(boardName);
-
+    // Filtra se o usuário selecionou uma placa específica
     const selectedBoard = boardSelect.value;
-    if (selectedBoard !== "" && boardName !== selectedBoard) return;
+    if (selectedBoard !== "" && selectedBoard !== "Todas" && boardName !== selectedBoard) return;
 
     // Armazena o valor no buffer da placa
     if (!dataBuffer[boardName]) dataBuffer[boardName] = {};
     dataBuffer[boardName][sensorName] = value;
 
+    // Monta o objeto consolidado
     const caseObj = {
       timestamp: new Date().toISOString(),
       board: boardName,
@@ -83,7 +92,7 @@ function connectMQTT() {
   });
 
   client.on("error", (err) => {
-    console.error("Erro MQTT:", err);
+    console.error("❌ Erro MQTT:", err);
     updateStatus("Erro na conexão MQTT");
   });
 
@@ -94,48 +103,65 @@ function connectMQTT() {
 
 // Envia dados para o CODAP
 function sendToCODAP(data) {
-  if (!codapConnected) {
-    codapInterface.init({
-      name: "Dados GoGoBoard",
-      title: "GoGoBoard Data",
-      dimensions: { width: 400, height: 300 },
-      version: "2.0"
-    });
-    codapConnected = true;
-  }
+  try {
+    if (!codapConnected && typeof codapInterface !== "undefined") {
+      codapInterface.init({
+        name: "Dados GoGoBoard",
+        title: "GoGoBoard Data",
+        dimensions: { width: 400, height: 300 },
+        version: "2.0"
+      });
+      codapConnected = true;
+      console.log("🔗 Conectado ao CODAP");
+    }
 
-  codapInterface.sendRequest({
-    action: "create",
-    resource: "dataContext[GoGoBoard].item",
-    values: [data]
-  });
+    if (codapConnected) {
+      codapInterface.sendRequest({
+        action: "create",
+        resource: "dataContext[GoGoBoard].item",
+        values: [data]
+      });
+    }
+  } catch (e) {
+    console.warn("⚠️ CODAP não disponível. Dados apenas exibidos localmente.");
+  }
 }
 
 // Exibe logs no painel
 function logData(data) {
   const output = document.getElementById("dadosEnviados");
+  if (!output) return;
+
   const entry = document.createElement("div");
-  entry.textContent = `[${data.timestamp}] ${data.board} | ${Object.entries(data)
+  entry.textContent = `[${new Date(data.timestamp).toLocaleTimeString("pt-BR")}] ${data.board} | ${Object.entries(data)
     .map(([k, v]) => (k !== "timestamp" && k !== "board" ? `${k}: ${v}` : ""))
     .filter(Boolean)
     .join(", ")}`;
   output.prepend(entry);
+
+  // Mantém o log limpo com até 20 entradas
+  while (output.childNodes.length > 22) {
+    output.removeChild(output.lastChild);
+  }
 }
 
 // Botões
 document.getElementById("startBtn").addEventListener("click", () => {
   collecting = true;
   updateStatus("Coleta iniciada...");
+  console.log("▶️ Coleta iniciada");
 });
 
 document.getElementById("stopBtn").addEventListener("click", () => {
   collecting = false;
   updateStatus("Coleta pausada.");
+  console.log("⏹️ Coleta pausada");
 });
 
 // Inicializa MQTT
 connectMQTT();
 updateStatus("Aguardando conexão...");
+
 
 
 
