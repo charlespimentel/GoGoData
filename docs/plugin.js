@@ -1,4 +1,4 @@
-// plugin.js — versão final com detecção automática de placas
+// plugin.js — versão 1.3 ajustada para o formato plog/gogodata/GoGo-XXXX/Sensor
 
 const statusText = document.getElementById("statusText");
 const indicator = document.getElementById("statusIndicator");
@@ -22,9 +22,7 @@ const options = {
   keepalive: 60
 };
 
-const client = mqtt.connect(brokerUrl, options);
-
-// Atualiza status visual
+// --- Funções de UI ---
 function setStatusIndicator(color) {
   indicator.classList.remove("bg-gray-400", "bg-green-500", "bg-red-500");
   if (color === "green") indicator.classList.add("bg-green-500");
@@ -37,7 +35,6 @@ function updateStatus(msg) {
   console.log("[GoGoData] " + msg);
 }
 
-// Atualiza lista de placas detectadas
 function updateBoardList(boardName) {
   if (!boardSelect || knownBoards.has(boardName)) return;
   knownBoards.add(boardName);
@@ -48,7 +45,6 @@ function updateBoardList(boardName) {
   console.log("🧩 Nova GoGoBoard detectada:", boardName);
 }
 
-// Registro visual no painel
 function logData(caseObj) {
   const logContainer = document.getElementById("dataLog");
   if (!logContainer) return;
@@ -61,7 +57,9 @@ function logData(caseObj) {
   if (logContainer.childNodes.length > 20) logContainer.removeChild(logContainer.lastChild);
 }
 
-// Conexão com o broker MQTT
+// --- Conexão MQTT ---
+const client = mqtt.connect(brokerUrl, options);
+
 client.on("connect", () => {
   console.log("✅ Conectado ao HiveMQ Cloud");
   client.subscribe("plog/#", (err) => {
@@ -86,6 +84,7 @@ client.on("message", (topic, message) => {
     return;
   }
 
+  // --- Extrai dados do tópico ---
   const parts = topic.split("/");
   const boardName = parts[2] || "unknown"; // plog/gogodata/GoGo-XXXX/Sensor
   const sensorName = parts[3] || "unknown";
@@ -111,7 +110,7 @@ client.on("message", (topic, message) => {
   logData(caseObj);
 });
 
-// CODAP
+// --- CODAP ---
 async function waitForCodap(timeout = 10000, interval = 200) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
@@ -173,7 +172,7 @@ function sendToCODAP(caseObj) {
   }
 }
 
-// Botões
+// --- Botões ---
 const startBtn = document.getElementById("startButton");
 const stopBtn = document.getElementById("stopButton");
 
@@ -193,11 +192,12 @@ if (startBtn && stopBtn) {
   });
 }
 
-// Inicialização
+// --- Inicialização ---
 (async function boot() {
   updateStatus("Inicializando plugin...");
   await initCodapIfAvailable();
   console.log("Boot completo. codapReady =", codapReady);
   setStatusIndicator("gray");
 })();
+
 
