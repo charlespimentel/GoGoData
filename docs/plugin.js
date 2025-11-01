@@ -1,7 +1,7 @@
 /* Plugin CODAP GoGoBoard – versão final 2025-11-01
    - Sem opção "Todas"
    - Com nomes amigáveis (Protótipo #1–#6)
-   - Popup maior (1000×720)
+   - Popup ampliado (1000×720)
 */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -115,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
             name: "GoGoBoard",
             collections: [{ name: "Dados Sensores", attrs: attributes }]
           }
-        }).then(result => {
+        }).then(() => {
           dataContextCreated = true;
           sendCaseToCODAP(data);
         });
@@ -204,6 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
   connectMQTT();
   updateStatus("Aguardando conexão...");
 });
+
 
 
 
