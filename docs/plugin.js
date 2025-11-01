@@ -1,4 +1,4 @@
-/* Plugin CODAP GoGoBoard – versão multi-sensores em colunas */
+/* Plugin CODAP GoGoBoard – versão multi-sensores em colunas (com teste de seletor) */
 
 const clientId = "gogodata-" + Math.random().toString(16).substr(2, 8);
 const mqttBroker = "wss://broker.hivemq.com:8884/mqtt";
@@ -8,9 +8,8 @@ let client;
 let collecting = false;
 let codapConnected = false;
 let boards = new Set();
-let dataBuffer = {}; // Armazena leituras temporárias por placa
+let dataBuffer = {};
 
-// Referências a elementos do DOM
 const statusEl = document.getElementById("status");
 const boardSelect = document.getElementById("boardSelect");
 
@@ -30,56 +29,46 @@ function updateBoardList(boardName) {
   }
 }
 
-// Conexão MQTT
 function connectMQTT() {
   client = mqtt.connect(mqttBroker, { clientId });
   updateStatus("Conectando ao broker...");
 
   client.on("connect", () => {
     console.log("✅ Conectado ao broker HiveMQ");
-    client.subscribe(topic, (err) => {
-      if (!err) {
-        console.log("📡 Inscrito no tópico:", topic);
-        updateStatus("Conectado. Aguardando dados...");
-      } else {
-        console.error("Erro ao se inscrever no tópico:", err);
-      }
-    });
+    updateStatus("Conectado. Aguardando dados...");
+    client.subscribe(topic);
+
+    // 👇 INSERE UMA PLACA DE TESTE AUTOMÁTICA
+    setTimeout(() => {
+      updateBoardList("GoGo-TestBoard");
+      console.log("✅ Teste: GoGo-TestBoard adicionada manualmente ao seletor.");
+    }, 1500);
   });
 
-  // Recebimento de mensagens MQTT
   client.on("message", (topic, message) => {
     const payload = message.toString().trim();
     console.log("📡 Recebido bruto:", topic, payload);
 
-    // Divide o tópico para extrair GoGoBoard e sensor
     const parts = topic.split("/");
     const boardName = parts[2] || "unknown";
     const sensorName = parts[3] || "unknown";
-
-    // Sempre registra a placa (mesmo se coleta estiver pausada)
     updateBoardList(boardName);
 
-    // Extrai o valor numérico do payload
     const valueMatch = payload.match(/=([\d.]+)/);
     const value = valueMatch ? parseFloat(valueMatch[1]) : null;
     if (value === null) return;
 
-    // Se coleta estiver pausada, apenas atualiza lista e ignora valores
     if (!collecting) {
       console.log("⏸️ Coleta pausada — mensagem ignorada");
       return;
     }
 
-    // Filtra se o usuário selecionou uma placa específica
     const selectedBoard = boardSelect.value;
     if (selectedBoard !== "" && selectedBoard !== "Todas" && boardName !== selectedBoard) return;
 
-    // Armazena o valor no buffer da placa
     if (!dataBuffer[boardName]) dataBuffer[boardName] = {};
     dataBuffer[boardName][sensorName] = value;
 
-    // Monta o objeto consolidado
     const caseObj = {
       timestamp: new Date().toISOString(),
       board: boardName,
@@ -90,18 +79,8 @@ function connectMQTT() {
     logData(caseObj);
     updateStatus("Coleta ativa...");
   });
-
-  client.on("error", (err) => {
-    console.error("❌ Erro MQTT:", err);
-    updateStatus("Erro na conexão MQTT");
-  });
-
-  client.on("close", () => {
-    updateStatus("Desconectado do broker");
-  });
 }
 
-// Envia dados para o CODAP
 function sendToCODAP(data) {
   try {
     if (!codapConnected && typeof codapInterface !== "undefined") {
@@ -112,7 +91,6 @@ function sendToCODAP(data) {
         version: "2.0"
       });
       codapConnected = true;
-      console.log("🔗 Conectado ao CODAP");
     }
 
     if (codapConnected) {
@@ -123,11 +101,10 @@ function sendToCODAP(data) {
       });
     }
   } catch (e) {
-    console.warn("⚠️ CODAP não disponível. Dados apenas exibidos localmente.");
+    console.warn("⚠️ CODAP não disponível, exibindo localmente.");
   }
 }
 
-// Exibe logs no painel
 function logData(data) {
   const output = document.getElementById("dadosEnviados");
   if (!output) return;
@@ -138,14 +115,8 @@ function logData(data) {
     .filter(Boolean)
     .join(", ")}`;
   output.prepend(entry);
-
-  // Mantém o log limpo com até 20 entradas
-  while (output.childNodes.length > 22) {
-    output.removeChild(output.lastChild);
-  }
 }
 
-// Botões
 document.getElementById("startBtn").addEventListener("click", () => {
   collecting = true;
   updateStatus("Coleta iniciada...");
@@ -158,9 +129,9 @@ document.getElementById("stopBtn").addEventListener("click", () => {
   console.log("⏹️ Coleta pausada");
 });
 
-// Inicializa MQTT
 connectMQTT();
 updateStatus("Aguardando conexão...");
+
 
 
 
