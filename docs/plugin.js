@@ -1,4 +1,4 @@
-/* Plugin CODAP GoGoBoard – versão final (Correção de exibição da placa no menu suspenso) */
+/* Plugin CODAP GoGoBoard – Versão Definitiva (Garantindo adição da placa ao menu) */
 
 document.addEventListener("DOMContentLoaded", () => {
     // --- Configurações Iniciais ---
@@ -16,12 +16,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let sendTimer = {}; 
 
     // --- Elementos DOM ---
-    // ATENÇÃO: Verifique se estes IDs estão corretos no seu HTML (status-message foi adicionado no HTML ajustado)
     const statusEl = document.getElementById("status-message"); 
     const boardSelect = document.getElementById("boardSelect");
     const startBtn = document.getElementById("startBtn");
     const stopBtn = document.getElementById("stopBtn");
-    const logOutputEl = document.getElementById("dadosEnviados");
+    const logOutputEl = document.getElementById("dadosEnviados"); 
 
     // --- Funções Auxiliares ---
 
@@ -29,24 +28,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (statusEl) statusEl.textContent = msg;
         console.log("[STATUS]", msg);
     }
-    
-    // FUNÇÃO CORRIGIDA
-    function updateBoardList(boardName) {
-        if (!boards.has(boardName)) {
-            boards.add(boardName);
-            const option = document.createElement("option");
-            option.value = boardName;
-            option.textContent = boardName;
-            
-            // Adiciona a nova opção APÓS a primeira opção ("Todas")
-            // Como "Todas" é a primeira, podemos inseri-la após o primeiro filho
-            if (boardSelect.children.length > 0) {
-                boardSelect.insertBefore(option, boardSelect.children[1]);
-            } else {
-                boardSelect.appendChild(option); // Fallback, mas não deve ocorrer se o HTML estiver certo
-            }
 
-            console.log("🧩 Nova GoGoBoard detectada:", boardName);
+    // FUNÇÃO CORRIGIDA PARA ADICIONAR PLACAS AO SELECT (Simplificada)
+    function updateBoardList(boardName) {
+        if (boardName && boardName.startsWith("GoGo-") && !boards.has(boardName)) {
+            boards.add(boardName);
+            
+            // Cria e adiciona a nova opção ao FINAL da lista (após 'Todas')
+            const newOption = new Option(boardName, boardName);
+            boardSelect.add(newOption);
+            
+            console.log("🧩 Nova GoGoBoard detectada e adicionada:", boardName);
         }
     }
 
@@ -60,14 +52,12 @@ document.addEventListener("DOMContentLoaded", () => {
             .filter(Boolean)
             .join(", ")}`;
 
-        // Adiciona no topo do log (após a tag <b>)
         if (logOutputEl.children.length > 0 && logOutputEl.children[0].tagName === 'B') {
             logOutputEl.insertBefore(entry, logOutputEl.children[1]);
         } else {
             logOutputEl.prepend(entry);
         }
 
-        // Limita o número de entradas no log
         let childCount = logOutputEl.children.length;
         if (logOutputEl.querySelector('b')) {
             childCount--;
@@ -79,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // --- Funções de Comunicação CODAP (Mantidas do ajuste anterior) ---
+    // --- Funções de Comunicação CODAP ---
 
     function sendCaseToCODAP(data) {
         if (codapConnected && dataContextCreated) {
@@ -166,27 +156,24 @@ document.addEventListener("DOMContentLoaded", () => {
             const boardName = parts[2];
             const sensorName = parts[3];
 
-            // 1. Verifica e Adiciona Placa (Mesmo que a coleta esteja parada)
+            // 1. Verifica e Adiciona Placa (MESMO QUE A COLETA ESTEJA PARADA)
             if (!boardName || !sensorName || !boardName.startsWith("GoGo-")) return;
-            updateBoardList(boardName);
+            updateBoardList(boardName); 
 
-            // 2. Extrai o valor
+            // 2. Extrai o valor e verifica se deve coletar
             const valueMatch = payload.match(/=([\d.]+)/);
             const value = valueMatch ? parseFloat(valueMatch[1]) : null;
-            if (value === null) return;
+            if (value === null || !collecting) return;
 
-            // 3. Verifica o estado de coleta
-            if (!collecting) return;
-
-            // 4. Filtra pela placa selecionada
+            // 3. Filtra pela placa selecionada
             const selectedBoard = boardSelect.value;
             if (selectedBoard !== "" && selectedBoard !== "Todas" && boardName !== selectedBoard) return;
 
-            // 5. Armazena o valor no buffer
+            // 4. Armazena o valor no buffer
             if (!dataBuffer[boardName]) dataBuffer[boardName] = {};
             dataBuffer[boardName][sensorName] = value;
 
-            // 6. Lógica de Agrupamento com Timer
+            // 5. Lógica de Agrupamento com Timer
             if (sendTimer[boardName]) {
                 clearTimeout(sendTimer[boardName]);
             }
@@ -195,7 +182,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const caseObj = {
                     timestamp: new Date().toISOString(),
                     board: boardName,
-                    ...dataBuffer[boardName] 
+                    ...dataBuffer[boardName]
                 };
 
                 sendToCODAP(caseObj);
