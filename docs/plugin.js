@@ -1,11 +1,11 @@
-/* Plugin CODAP GoGoBoard – versão final 2025-11-01
+/* Plugin CODAP GoGoBoard – versão estável 2025-11-01
    - Sem opção "Todas"
-   - Com nomes amigáveis (Protótipo #1–#6)
-   - Popup ampliado (1000×720)
+   - Nomes amigáveis (Protótipo #1–#6)
+   - Tamanho fixo no CODAP (720×520)
 */
 
 document.addEventListener("DOMContentLoaded", () => {
-  // --- Configurações iniciais ---
+  // --- Configurações MQTT ---
   const clientId = "gogodata-" + Math.random().toString(16).substr(2, 8);
   const mqttBroker = "wss://97b1be8c4f87478a93468f5795d02a96.s1.eu.hivemq.cloud:8884/mqtt";
   const topic = "plog/gogodata/#";
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "GoGo-99A5FCEE": "Protótipo #6"
   };
 
-  // --- Variáveis de estado ---
+  // --- Estado interno ---
   let client;
   let collecting = false;
   let codapConnected = false;
@@ -46,12 +46,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const stopBtn = document.getElementById("stopBtn");
   const logOutputEl = document.getElementById("dadosEnviados");
 
-  // --- Funções auxiliares ---
+  // --- Atualiza status na interface ---
   function updateStatus(msg) {
     if (statusEl) statusEl.textContent = msg;
     console.log("[STATUS]", msg);
   }
 
+  // --- Exibe dados no painel de log ---
   function logData(data) {
     if (!logOutputEl) return;
     const displayName = boardAliases[data.board] || data.board;
@@ -60,19 +61,15 @@ document.addEventListener("DOMContentLoaded", () => {
       .map(([k, v]) => (k !== "timestamp" && k !== "board" ? `${k}: ${v}` : ""))
       .filter(Boolean)
       .join(", ")}`;
+    logOutputEl.prepend(entry);
 
-    if (logOutputEl.children.length > 0 && logOutputEl.children[0].tagName === "B") {
-      logOutputEl.insertBefore(entry, logOutputEl.children[1]);
-    } else {
-      logOutputEl.prepend(entry);
-    }
-
-    while (logOutputEl.children.length > 20) {
+    // Mantém o log limpo
+    while (logOutputEl.children.length > 25) {
       logOutputEl.removeChild(logOutputEl.lastChild);
     }
   }
 
-  // --- Comunicação CODAP ---
+  // --- Envia dados ao CODAP ---
   function sendCaseToCODAP(data) {
     if (codapConnected && dataContextCreated) {
       codapInterface.sendRequest({
@@ -85,16 +82,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function sendToCODAP(data) {
     try {
+      // Inicializa conexão CODAP se necessário
       if (!codapConnected && typeof codapInterface !== "undefined") {
         codapInterface.init({
           name: "GoGoData Plugin",
           title: "GoGoData Plugin",
-          dimensions: { width: 500, height: 250 },
-          version: "2.0"
+          version: "2.0",
+          dimensions: { width: 720, height: 520 },
+          preventDataContextReorg: true // evita redimensionamento
         });
         codapConnected = true;
       }
 
+      // Cria o Data Context na primeira execução
       if (codapConnected && !dataContextCreated) {
         const attributeNames = Object.keys(data).filter(key => key !== "timestamp" && key !== "board");
 
@@ -123,11 +123,11 @@ document.addEventListener("DOMContentLoaded", () => {
         sendCaseToCODAP(data);
       }
     } catch (e) {
-      console.warn("⚠️ Erro ao interagir com o CODAP.", e);
+      console.warn("⚠️ Erro ao enviar dados ao CODAP:", e);
     }
   }
 
-  // --- Comunicação MQTT ---
+  // --- Conexão MQTT ---
   function connectMQTT() {
     client = mqtt.connect(mqttBroker, options);
     updateStatus("Conectando ao broker...");
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         delete dataBuffer[boardName];
         delete sendTimer[boardName];
-      }, 50);
+      }, 60);
     });
 
     client.on("error", err => {
@@ -184,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Controles ---
+  // --- Botões ---
   startBtn.addEventListener("click", () => {
     const selectedBoard = boardSelect.value;
     if (!selectedBoard) {
@@ -204,6 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
   connectMQTT();
   updateStatus("Aguardando conexão...");
 });
+
 
 
 
