@@ -1,4 +1,8 @@
-/* Plugin CODAP GoGoBoard – versão final sem "Todas", com nomes amigáveis */
+/* Plugin CODAP GoGoBoard – versão final 2025-11-01
+   - Sem opção "Todas"
+   - Com nomes amigáveis (Protótipo #1–#6)
+   - Popup maior (1000×720)
+*/
 
 document.addEventListener("DOMContentLoaded", () => {
   // --- Configurações iniciais ---
@@ -17,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     keepalive: 60
   };
 
-  // --- Mapeamento de nomes amigáveis ---
+  // --- Sinônimos das placas ---
   const boardAliases = {
     "GoGo-99A5FCE8": "Protótipo #1",
     "GoGo-0C47ED10": "Protótipo #2",
@@ -50,7 +54,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function logData(data) {
     if (!logOutputEl) return;
-
     const displayName = boardAliases[data.board] || data.board;
     const entry = document.createElement("div");
     entry.textContent = `[${new Date(data.timestamp).toLocaleTimeString("pt-BR")}] ${displayName} | ${Object.entries(data)
@@ -84,9 +87,9 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       if (!codapConnected && typeof codapInterface !== "undefined") {
         codapInterface.init({
-          name: "Dados GoGoBoard",
-          title: "GoGoBoard Data",
-          dimensions: { width: 800, height: 600 },
+          name: "GoGoData Plugin",
+          title: "GoGoData Plugin",
+          dimensions: { width: 1000, height: 720 },
           version: "2.0"
         });
         codapConnected = true;
@@ -110,25 +113,17 @@ document.addEventListener("DOMContentLoaded", () => {
           resource: "dataContext",
           values: {
             name: "GoGoBoard",
-            collections: [{
-              name: "Dados Sensores",
-              attrs: attributes
-            }]
+            collections: [{ name: "Dados Sensores", attrs: attributes }]
           }
         }).then(result => {
-          if (result.success) {
-            dataContextCreated = true;
-            sendCaseToCODAP(data);
-          } else {
-            dataContextCreated = true;
-            sendCaseToCODAP(data);
-          }
+          dataContextCreated = true;
+          sendCaseToCODAP(data);
         });
       } else if (dataContextCreated) {
         sendCaseToCODAP(data);
       }
     } catch (e) {
-      console.warn("⚠️ Erro ao interagir com o CODAP (verifique se o plugin está embutido).", e);
+      console.warn("⚠️ Erro ao interagir com o CODAP.", e);
     }
   }
 
@@ -179,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 50);
     });
 
-    client.on("error", (err) => {
+    client.on("error", err => {
       console.error("❌ Erro MQTT:", err);
       updateStatus("Erro na conexão MQTT");
     });
@@ -189,8 +184,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Controles de coleta ---
+  // --- Controles ---
   startBtn.addEventListener("click", () => {
+    const selectedBoard = boardSelect.value;
+    if (!selectedBoard) {
+      updateStatus("Selecione uma placa antes de iniciar a coleta.");
+      return;
+    }
     collecting = true;
     updateStatus("Coleta iniciada...");
   });
@@ -204,6 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
   connectMQTT();
   updateStatus("Aguardando conexão...");
 });
+
 
 
 
