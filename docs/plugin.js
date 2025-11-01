@@ -1,4 +1,4 @@
-/* Plugin CODAP GoGoBoard – versão multi-sensores (inicialização segura) */
+/* Plugin CODAP GoGoBoard – versão funcional com detecção automática */
 
 document.addEventListener("DOMContentLoaded", () => {
   const clientId = "gogodata-" + Math.random().toString(16).substr(2, 8);
@@ -41,22 +41,17 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("✅ Conectado ao broker HiveMQ");
       updateStatus("Conectado. Aguardando dados...");
       client.subscribe(topic);
-
-      // Teste de seletor
-      setTimeout(() => {
-        updateBoardList("GoGo-TestBoard");
-        console.log("✅ Teste: GoGo-TestBoard adicionada manualmente ao seletor.");
-      }, 1500);
     });
 
     client.on("message", (topic, message) => {
       const payload = message.toString().trim();
-      console.log("📡 Recebido bruto:", topic, payload);
+      console.log("📡 Recebido:", topic, payload);
 
       const parts = topic.split("/");
       const boardName = parts[2] || "unknown";
       const sensorName = parts[3] || "unknown";
-      updateBoardList(boardName);
+
+      updateBoardList(boardName); // adiciona ao seletor
 
       const valueMatch = payload.match(/=([\d.]+)/);
       const value = valueMatch ? parseFloat(valueMatch[1]) : null;
@@ -149,6 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
   connectMQTT();
   updateStatus("Aguardando conexão...");
 });
+
 
 
 
