@@ -2,10 +2,21 @@
 
 const statusText = document.getElementById("statusText");
 
+
+
+
+
 // ---Teste Fake Parte 1---
+
+
 /*
+
+
 const fakeBtn = document.getElementById("sendFakeButton");
+
+
 */
+
 
 const indicator = document.getElementById("statusIndicator");
 
@@ -20,18 +31,33 @@ const codapSendQueue = [];
 // Broker MQTT (HiveMQ Cloud)
 const brokerUrl = "wss://97b1be8c4f87478a93468f5795d02a96.s1.eu.hivemq.cloud:8884/mqtt";
 
+/*
 const options = {
   username: "admin",
   password: "Gogoboard!1",
   clean: true,
   connectTimeout: 2000,
   reconnectPeriod: 1000 // tenta reconectar a cada 1s
+};*/
+
+// novo const option 30 de outubro
+
+const options = {
+  username: "admin",
+  password: "@Gogoboard1",
+  clean: true,
+  connectTimeout: 4000,
+  reconnectPeriod: 1000,
+  protocolVersion: 4,
+  rejectUnauthorized: false,
+  keepalive: 60
 };
 
 // --- Conexão MQTT ---
 const client = mqtt.connect(brokerUrl, options);
 
 client.on("connect", () => {
+  console.log("🔗 Conectado com sucesso, tentando assinar plog/#");
   console.log("✅ Conectado ao HiveMQ Cloud!");
   client.subscribe("plog/#", (err) => {
     if (!err) {
@@ -41,6 +67,46 @@ client.on("connect", () => {
       console.error("Erro ao se inscrever:", err);
     }
   });
+
+  if (codapReady) {
+    console.log("🔁 Reconectado, reenviando fila de dados...");
+    flushCodapQueue();
+  }
+});
+
+// --- Recepção de mensagens MQTT ---
+client.on("message", (topic, message) => {
+  console.log("📡 Recebido bruto:", topic, message.toString()); // log de debug
+  const payload = message.toString().trim();
+  console.log(`Mensagem recebida de ${topic}:`, payload);
+
+  if (!collecting) {
+    console.log("⏸️ Coleta pausada — mensagem ignorada");
+    return;
+  }
+
+  // Extrair dados GoGo (formato: "nomeGoGo/luz=846.00")
+  const parts = topic.split("/");
+  let boardName = parts[1] || "unknown";
+  let sensorName = parts[2] || "unknown";
+
+  let valueMatch = payload.match(/=([\d.]+)/);
+  let value = valueMatch ? parseFloat(valueMatch[1]) : null;
+
+  if (value !== null) {
+    const caseObj = {
+      timestamp: new Date().toISOString(),
+      board: boardName,
+      sensor: sensorName,
+      value: value
+    };
+    console.log("Enviando ao CODAP:", caseObj);
+    sendToCODAP(caseObj);
+    updateStatus("Processado: " + caseObj.timestamp);
+    logData(caseObj);
+  } else {
+    console.warn("⚠️ Payload não reconhecido:", payload);
+  }
 });
 
 client.on("error", (err) => {
@@ -48,10 +114,43 @@ client.on("error", (err) => {
   console.error("Erro na conexão MQTT:", err);
 });
 
+/*
+
+// --- Conexão MQTT ---
+const client = mqtt.connect(brokerUrl, options);
+
+client.on("connect", () => {
+
+  console.log("🔗 Conectado com sucesso, tentando assinar plog/#"); // 30 de outubro
+  console.log("✅ Conectado ao HiveMQ Cloud!");
+  client.subscribe("plog/#", (err) => {
+    if (!err) {
+      setStatusIndicator("green");
+      console.log("Inscrito em plog/#");
+    } else {
+      console.error("Erro ao se inscrever:", err);
+    }
+  });
+
+  if (codapReady) {
+    console.log("🔁 Reconectado, reenviando fila de dados...");
+    flushCodapQueue();
+  }
+});
+
+client.on("error", (err) => {
+  setStatusIndicator("red");
+  console.error("Erro na conexão MQTT:", err);
+});
+
+*/
+
 // --- Recepção de mensagens MQTT ---
 client.on("message", (topic, message) => {
   const payload = message.toString().trim();
   console.log(`Mensagem recebida de ${topic}:`, payload);
+  console.log("📨 Mensagem recebida no navegador:", topic, message.toString()); // 30 de outubro
+
 
   // 26 de outubro Se a coleta estiver desativada, ignora as mensagens
   if (!collecting) {
@@ -119,13 +218,26 @@ function logData(caseObj) {
   if (!logContainer) return;
 
   const entry = document.createElement("div");
-  entry.textContent = `${caseObj.timestamp} | ${caseObj.board} | ${caseObj.sensor} = ${caseObj.value}`;
-  logContainer.prepend(entry); // adiciona no topo
 
+  // Formata a hora local legível (ex: 14:32:05)
+  const hora = new Date(caseObj.timestamp).toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+
+  // Exibe apenas hora e valor no painel
+  entry.textContent = `${hora} | ${caseObj.sensor}: ${caseObj.value}`;
+
+  // Adiciona o registro no topo da lista
+  logContainer.prepend(entry);
+
+  // Mantém no máximo 20 registros
   if (logContainer.childNodes.length > 20) {
     logContainer.removeChild(logContainer.lastChild);
   }
 }
+
 
 // --- aguarda codapInterface ---
 async function waitForCodap(timeout = 10000, interval = 200) {
@@ -154,7 +266,7 @@ async function initCodapIfAvailable() {
       name: "GoGoData",
       title: "Dados GoGoBoard",
       version: "1.2",
-      dimensions: { width: 420, height: 400 },
+      dimensions: { width: 600, height: 400 },
       preventDataContextReorg: false
     });
 
@@ -185,7 +297,7 @@ async function initCodapIfAvailable() {
     flushCodapQueue();
   } catch (e) {
     console.error("Erro inicializando codapInterface ou criando dataContext:", e);
-    updateStatus("Erro na inicialização do CODAP");
+    updateStatus("Inicialize no CODAP");
     codapReady = false;
   }
 }
@@ -229,9 +341,9 @@ const stopBtn = document.getElementById("stopButton");
 if (startBtn && stopBtn) {
   startBtn.addEventListener("click", () => {
     collecting = true;
-    updateStatus("Coleta iniciada");
+    updateStatus("Coleta iniciada — aguardando dados...");
     setStatusIndicator("green");
-    console.log("▶️ Coleta iniciada");
+    console.log("▶️ Coleta iniciada e aguardando dados do broker...");
   });
 
   stopBtn.addEventListener("click", () => {
@@ -241,6 +353,10 @@ if (startBtn && stopBtn) {
     console.log("⏹️ Coleta interrompida");
   });
 }
+
+
+
+
 
 
 // ---Teste Fake Parte 2---
@@ -272,7 +388,11 @@ fakeBtn.addEventListener("click", () => {
   }, 2000);
 });
 
+
 */
+
+
+
 
 // ----------------- inicialização -----------------
 (async function boot() {
