@@ -1,20 +1,29 @@
 ﻿Documentação de Desenvolvimento e Uso do Plugin GoGoBoard + CODAP 
-Introdução 
+
+(01) Introdução 
 Este documento descreve o desenvolvimento e o uso de um plugin que integra a placa GoGoBoard ao ambiente CODAP através de um servidor MQTT (HiveMQ Cloud). O objetivo do plugin é permitir que dados coletados pela GoGoBoard sejam transmitidos via MQTT, processados no plugin e visualizados diretamente no CODAP em forma de tabelas de dados. O plugin foi projetado para ser robusto contra problemas de inicialização e ordem de carregamento do CODAP, garantindo que dados não sejam perdidos mesmo que o CODAP ainda não esteja pronto no momento do envio. Além disso, suporta múltiplos formatos de mensagem (CSV e JSON), o que facilita testes e integração com diferentes firmwares. 
-Passo a Passo do Funcionamento 
-Inicialização 
+
+(02) Passo a Passo do Funcionamento 
+
+2.a - Inicialização 
 O plugin carrega dentro de um iframe no CODAP. Ele busca os elementos da interface (botões e status) e prepara variáveis internas para controle do fluxo de dados. 
-Detecção do CODAP 
+
+2.b - Detecção do CODAP 
 O plugin utiliza uma função de espera (polling) chamada `waitForCodap()` que verifica se a API do CODAP (`codapInterface`) já está disponível. Caso positivo, o plugin inicializa a conexão criando um *dataContext* e uma coleção de dados chamada `GoGoBoardData`. Caso não esteja disponível, os dados são armazenados em uma fila até que a conexão seja estabelecida. 
-Fila de envio 
+
+2.c - Fila de envio 
 Dados recebidos antes da inicialização do CODAP são mantidos em uma fila (`codapSendQueue`). Quando o CODAP está pronto, a função `flushCodapQueue()` envia todos os casos armazenados. 
-Conexão MQTT 
+
+2.d - Conexão MQTT 
 O plugin utiliza a biblioteca MQTT.js para se conectar a um broker MQTT (HiveMQ Cloud) via WebSocket seguro (WSS). O broker exige autenticação por usuário e senha, definidos no HiveMQ Cloud. 
-Recepção de dados 
+
+2.e - Recepção de dados 
 A GoGoBoard, com firmware customizado, envia mensagens para o broker MQTT no tópico configurado (exemplo: `gogo/sensores`). O plugin está inscrito nesse tópico e recebe as mensagens publicadas. 
-Processamento de mensagens 
+
+2.f - Processamento de mensagens 
 Ao receber uma mensagem, o plugin converte o payload em string e utiliza `parsePayload()` para interpretar o formato. O plugin suporta tanto CSV (ex: `12,34,56`) quanto JSON (ex: `{"s1":12,"s2":34,"s3":56}`). Os valores são avaliados e transformados em um objeto `case` com timestamp.
-Envio ao CODAP 
+
+2.g - Envio ao CODAP 
 Cada `case` é enviado ao CODAP via `codapInterface.sendRequest()`. Caso o CODAP ainda não esteja pronto, o caso é enfileirado. 
 Visualização no CODAP 
 No CODAP, os dados aparecem em uma tabela (dataset) chamada `GoGoBoardData`, onde cada linha corresponde a uma mensagem recebida do MQTT, contendo as colunas `timestamp`, `sensor1`, `sensor2` e `sensor3`.

@@ -40,10 +40,10 @@ O plugin é executado dentro de um iframe no CODAP e se conecta a um broker MQTT
 Os parâmetros de conexão podem ser ajustados no arquivo `V2.0 (Final)/plugin.js`:
 
 ```javascript
-const brokerUrl = "wss://38543d8f57c14b2f8ef0c5c4e3130977.s1.eu.hivemq.cloud:8884/mqtt";
+const brokerUrl = "wss://********************************.s1.eu.hivemq.cloud:8884/mqtt";
 const options = {
-  username: "admin",
-  password: "Gogoboard!1",
+  username: "*****",
+  password: "*****",
   clean: true,
   connectTimeout: 2000,
   reconnectPeriod: 1000
@@ -65,11 +65,6 @@ const options = {
 1. Aguardar a detecção automática da API `codapInterface`. O plugin tentará novamente a cada 5 segundos até a conexão ser estabelecida.
 2. Após a conexão, o plugin cria o *dataContext* `GoGoBoardData` com a coleção `leituras` e atributos necessários.
 3. Caso o CODAP ainda não esteja pronto, as mensagens ficam armazenadas em `codapSendQueue` e são reenviadas ao CODAP quando a conexão for concluída.
-
-## Testes com dados fictícios
-
-- Utilize o botão **🧪 Enviar Dados** para gerar cinco leituras simuladas em intervalos de 2 segundos.
-- As leituras aparecem no log da interface e são enviadas ao CODAP, permitindo validar a configuração sem depender do hardware.
 
 ## Documentação adicional
 
