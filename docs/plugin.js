@@ -1,10 +1,15 @@
-/* Plugin CODAP GoGoBoard – Versão Definitiva (Garantindo adição da placa ao menu) */
+/* Plugin CODAP GoGoBoard – Versão Definitiva (Usando HiveMQ Cloud com Credenciais) */
 
 document.addEventListener("DOMContentLoaded", () => {
     // --- Configurações Iniciais ---
     const clientId = "gogodata-" + Math.random().toString(16).substr(2, 8);
-    const mqttBroker = "wss://broker.hivemq.com:8884/mqtt";
+    // NOVO ENDEREÇO DO BROKER FORNECIDO PELO USUÁRIO
+    const mqttBroker = "wss://97b1be8c4f87478a93468f5795d02a96.s1.eu.hivemq.cloud:8884/mqtt";
     const topic = "plog/gogodata/#";
+    
+    // NOVAS CREDENCIAIS
+    const mqttUsername = "admin";
+    const mqttPassword = "@Gogoboard1";
 
     // --- Variáveis de Estado ---
     let client;
@@ -29,14 +34,17 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log("[STATUS]", msg);
     }
 
-    // FUNÇÃO CORRIGIDA PARA ADICIONAR PLACAS AO SELECT (Simplificada)
+    // FUNÇÃO PARA ADICIONAR PLACAS AO SELECT (Usando DOM nativo: createElement + appendChild)
     function updateBoardList(boardName) {
         if (boardName && boardName.startsWith("GoGo-") && !boards.has(boardName)) {
             boards.add(boardName);
             
-            // Cria e adiciona a nova opção ao FINAL da lista (após 'Todas')
-            const newOption = new Option(boardName, boardName);
-            boardSelect.add(newOption);
+            const option = document.createElement("option");
+            option.value = boardName;
+            option.textContent = boardName;
+            
+            // Adiciona o elemento ao final do select (após 'Todas')
+            boardSelect.appendChild(option); 
             
             console.log("🧩 Nova GoGoBoard detectada e adicionada:", boardName);
         }
@@ -137,15 +145,20 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // --- Comunicação MQTT ---
+    // --- Comunicação MQTT (AJUSTADA) ---
 
     function connectMQTT() {
-        client = mqtt.connect(mqttBroker, { clientId });
-        updateStatus("Conectando ao broker...");
+        // Inclui as credenciais na conexão
+        client = mqtt.connect(mqttBroker, { 
+            clientId: clientId,
+            username: mqttUsername, // Usuário
+            password: mqttPassword  // Senha
+        });
+        updateStatus("Conectando ao broker privado...");
 
         client.on("connect", () => {
-            console.log("✅ Conectado ao broker HiveMQ");
-            updateStatus("Conectado. Aguardando dados...");
+            console.log("✅ Conectado ao broker HiveMQ Cloud");
+            updateStatus("Conectado e autenticado. Aguardando dados...");
             client.subscribe(topic);
         });
 
@@ -156,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const boardName = parts[2];
             const sensorName = parts[3];
 
-            // 1. Verifica e Adiciona Placa (MESMO QUE A COLETA ESTEJA PARADA)
+            // 1. Verifica e Adiciona Placa
             if (!boardName || !sensorName || !boardName.startsWith("GoGo-")) return;
             updateBoardList(boardName); 
 
@@ -198,7 +211,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         client.on("error", (err) => {
             console.error("❌ Erro MQTT:", err);
-            updateStatus("Erro na conexão MQTT");
+            // Mensagem de status mais útil em caso de falha de conexão ou autenticação
+            updateStatus("Erro na conexão MQTT. Verifique as credenciais ou o endereço."); 
         });
 
         client.on("close", () => {
