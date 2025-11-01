@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
         codapInterface.init({
           name: "GoGoData Plugin",
           title: "GoGoData Plugin",
-          dimensions: { width: 850, height: 500 },
+          dimensions: { width: 500, height: 250 },
           version: "2.0"
         });
         codapConnected = true;
