@@ -8,7 +8,7 @@ let client;
 let collecting = false;
 let codapConnected = false;
 let boards = new Set();
-let dataBuffer = {}; // Armazena temporariamente leituras por board
+let dataBuffer = {}; // Armazena leituras temporárias por placa
 
 const statusEl = document.getElementById("status");
 const boardSelect = document.getElementById("boardSelect");
@@ -45,7 +45,6 @@ function connectMQTT() {
     });
   });
 
-  // Recebimento de mensagens MQTT
   client.on("message", (topic, message) => {
     const payload = message.toString().trim();
     console.log("📡 Recebido bruto:", topic, payload);
@@ -58,6 +57,7 @@ function connectMQTT() {
     const parts = topic.split("/");
     const boardName = parts[2] || "unknown";
     const sensorName = parts[3] || "unknown";
+
     const valueMatch = payload.match(/=([\d.]+)/);
     const value = valueMatch ? parseFloat(valueMatch[1]) : null;
     if (value === null) return;
@@ -65,13 +65,12 @@ function connectMQTT() {
     updateBoardList(boardName);
 
     const selectedBoard = boardSelect.value;
-    if (selectedBoard !== "Todas" && boardName !== selectedBoard) return;
+    if (selectedBoard !== "" && boardName !== selectedBoard) return;
 
     // Armazena o valor no buffer da placa
     if (!dataBuffer[boardName]) dataBuffer[boardName] = {};
     dataBuffer[boardName][sensorName] = value;
 
-    // Monta o registro consolidado
     const caseObj = {
       timestamp: new Date().toISOString(),
       board: boardName,
@@ -114,7 +113,7 @@ function sendToCODAP(data) {
 
 // Exibe logs no painel
 function logData(data) {
-  const output = document.getElementById("sentData");
+  const output = document.getElementById("dadosEnviados");
   const entry = document.createElement("div");
   entry.textContent = `[${data.timestamp}] ${data.board} | ${Object.entries(data)
     .map(([k, v]) => (k !== "timestamp" && k !== "board" ? `${k}: ${v}` : ""))
@@ -124,12 +123,12 @@ function logData(data) {
 }
 
 // Botões
-document.getElementById("startButton").addEventListener("click", () => {
+document.getElementById("startBtn").addEventListener("click", () => {
   collecting = true;
   updateStatus("Coleta iniciada...");
 });
 
-document.getElementById("stopButton").addEventListener("click", () => {
+document.getElementById("stopBtn").addEventListener("click", () => {
   collecting = false;
   updateStatus("Coleta pausada.");
 });
@@ -137,6 +136,7 @@ document.getElementById("stopButton").addEventListener("click", () => {
 // Inicializa MQTT
 connectMQTT();
 updateStatus("Aguardando conexão...");
+
 
 
 
