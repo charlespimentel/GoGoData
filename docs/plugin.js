@@ -1,4 +1,4 @@
-/* Plugin CODAP GoGoBoard - Revisado por Charles e GPT-5 */
+/* Plugin CODAP GoGoBoard – versão multi-sensores em colunas */
 
 const clientId = "gogodata-" + Math.random().toString(16).substr(2, 8);
 const mqttBroker = "wss://broker.hivemq.com:8884/mqtt";
@@ -8,6 +8,7 @@ let client;
 let collecting = false;
 let codapConnected = false;
 let boards = new Set();
+let dataBuffer = {}; // Armazena temporariamente leituras por board
 
 const statusEl = document.getElementById("status");
 const boardSelect = document.getElementById("boardSelect");
@@ -57,28 +58,29 @@ function connectMQTT() {
     const parts = topic.split("/");
     const boardName = parts[2] || "unknown";
     const sensorName = parts[3] || "unknown";
-
-    console.log("📍 Identificado board:", boardName, "| sensor:", sensorName);
-
-    updateBoardList(boardName);
-
     const valueMatch = payload.match(/=([\d.]+)/);
     const value = valueMatch ? parseFloat(valueMatch[1]) : null;
     if (value === null) return;
 
+    updateBoardList(boardName);
+
     const selectedBoard = boardSelect.value;
     if (selectedBoard !== "Todas" && boardName !== selectedBoard) return;
 
+    // Armazena o valor no buffer da placa
+    if (!dataBuffer[boardName]) dataBuffer[boardName] = {};
+    dataBuffer[boardName][sensorName] = value;
+
+    // Monta o registro consolidado
     const caseObj = {
       timestamp: new Date().toISOString(),
       board: boardName,
-      sensor: sensorName,
-      value: value
+      ...dataBuffer[boardName]
     };
 
     sendToCODAP(caseObj);
-    updateStatus("Processado: " + caseObj.timestamp);
     logData(caseObj);
+    updateStatus("Coleta ativa...");
   });
 
   client.on("error", (err) => {
@@ -91,14 +93,14 @@ function connectMQTT() {
   });
 }
 
-// Envia dados para CODAP
+// Envia dados para o CODAP
 function sendToCODAP(data) {
   if (!codapConnected) {
     codapInterface.init({
       name: "Dados GoGoBoard",
       title: "GoGoBoard Data",
       dimensions: { width: 400, height: 300 },
-      version: "1.0"
+      version: "2.0"
     });
     codapConnected = true;
   }
@@ -110,15 +112,18 @@ function sendToCODAP(data) {
   });
 }
 
-// Exibe logs simples no painel
+// Exibe logs no painel
 function logData(data) {
   const output = document.getElementById("sentData");
   const entry = document.createElement("div");
-  entry.textContent = `[${data.timestamp}] ${data.board} - ${data.sensor}: ${data.value}`;
+  entry.textContent = `[${data.timestamp}] ${data.board} | ${Object.entries(data)
+    .map(([k, v]) => (k !== "timestamp" && k !== "board" ? `${k}: ${v}` : ""))
+    .filter(Boolean)
+    .join(", ")}`;
   output.prepend(entry);
 }
 
-// Botões de controle
+// Botões
 document.getElementById("startButton").addEventListener("click", () => {
   collecting = true;
   updateStatus("Coleta iniciada...");
@@ -129,9 +134,10 @@ document.getElementById("stopButton").addEventListener("click", () => {
   updateStatus("Coleta pausada.");
 });
 
-// Inicialização
+// Inicializa MQTT
 connectMQTT();
 updateStatus("Aguardando conexão...");
+
 
 
 
