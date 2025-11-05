@@ -1,0 +1,16 @@
+{
+  "name": "GoGoData Plugin",
+  "description": "Conecte sua GoGoBoard via rede e envie dados em tempo real para o CODAP.",
+  "version": "1.0",
+  "dimensions": {
+    "width": 720,
+    "height": 520
+  },
+  "componentID": "GoGoData",
+  "pluginType": "interactive",
+  "pluginURL": "index.html",
+  "externalDependencies": [],
+  "category": "Data Collection",
+  "author": "Charles Pimentel | GRECO-UFRJ & TLTL-Columbia",
+  "repository": "https://charlespimentel.github.io/GoGoData/"
+}

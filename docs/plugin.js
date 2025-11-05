@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // --- Sinônimos das placas ---
   const boardAliases = {
-    "GoGo-99A5FCE8": "Microcontrolador #1",
+    "GoGo-99A5EF24": "Microcontrolador #1",
     "GoGo-0C47ED10": "Microcontrolador #2",
     "GoGo-99A5FCBB": "Microcontrolador #3",
     "GoGo-99A5FCCC": "Microcontrolador #4",
