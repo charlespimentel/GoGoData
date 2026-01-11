@@ -76,10 +76,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const displayName = boardAliases[data.board] || data.board;
     const entry = document.createElement("div");
 
-    entry.textContent = `[${new Date(data.timestamp).toLocaleTimeString("pt-BR")}] ${displayName} | ${Object.entries(data)
-      .map(([k, v]) => (k !== "timestamp" && k !== "board" ? `${k}: ${v}` : ""))
+    entry.textContent = [${new Date(data.timestamp).toLocaleTimeString("pt-BR")}] ${displayName} | ${Object.entries(data)
+      .map(([k, v]) => (k !== "timestamp" && k !== "board" ? ${k}: ${v} : ""))
       .filter(Boolean)
-      .join(", ")}`;
+      .join(", ")};
 
     logOutputEl.prepend(entry);
 
@@ -221,7 +221,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // --- Inicialização ---
-  connectMQTT();
   updateStatus("Aguardando conexão...");
+  connectMQTT();
+  
 
 });
