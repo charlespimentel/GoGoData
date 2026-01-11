@@ -7,7 +7,7 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // --- Registro no CODAP (corrige "Unknown Game") ---
+  // --- Registro no CODAP ---
   try {
     await codapInterface.init({
       name: "GoGoData",
@@ -17,13 +17,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       preventDataContextReorg: true
     });
 
-    console.log("✅ Plugin GoGoData registrado corretamente no CODAP.");
+    console.log("Plugin GoGoData registrado corretamente no CODAP.");
   } catch (err) {
-    console.warn("⚠️ Erro ao registrar no CODAP:", err);
+    console.warn("Erro ao registrar no CODAP:", err);
   }
 
   // --- Configurações MQTT ---
-  const clientId = "gogodata-" + Math.random().toString(16).substr(2, 8);
   const mqttBroker = "wss://97b1be8c4f87478a93468f5795d02a96.s1.eu.hivemq.cloud:8884/mqtt";
   const topic = "plog/gogodata/#";
 
@@ -51,7 +50,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // --- Estado interno ---
   let client;
   let collecting = false;
-  let codapConnected = true;
   let dataContextCreated = false;
   let dataBuffer = {};
   let sendTimer = {};
@@ -63,23 +61,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   const stopBtn = document.getElementById("stopBtn");
   const logOutputEl = document.getElementById("dadosEnviados");
 
-  // --- Atualiza status na interface ---
+  // --- Atualiza status ---
   function updateStatus(msg) {
     if (statusEl) statusEl.textContent = msg;
     console.log("[STATUS]", msg);
   }
 
-  // --- Exibe dados no painel de log ---
+  // --- Log visual ---
   function logData(data) {
     if (!logOutputEl) return;
 
     const displayName = boardAliases[data.board] || data.board;
     const entry = document.createElement("div");
 
-    entry.textContent = [${new Date(data.timestamp).toLocaleTimeString("pt-BR")}] ${displayName} | ${Object.entries(data)
-      .map(([k, v]) => (k !== "timestamp" && k !== "board" ? ${k}: ${v} : ""))
+    entry.textContent = `[${new Date(data.timestamp).toLocaleTimeString("pt-BR")}] ${displayName} | ${Object.entries(data)
+      .map(([k, v]) => (k !== "timestamp" && k !== "board" ? `${k}: ${v}` : ""))
       .filter(Boolean)
-      .join(", ")};
+      .join(", ")}`;
 
     logOutputEl.prepend(entry);
 
@@ -88,9 +86,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // --- Envia dados ao CODAP ---
+  // --- Envio ao CODAP ---
   function sendCaseToCODAP(data) {
-    if (codapConnected && dataContextCreated) {
+    if (dataContextCreated) {
       codapInterface.sendRequest({
         action: "create",
         resource: "dataContext[GoGoBoard].item",
@@ -100,85 +98,73 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function sendToCODAP(data) {
-    try {
-      if (codapConnected && !dataContextCreated) {
+    if (!dataContextCreated) {
+      const attributeNames = Object.keys(data).filter(
+        key => key !== "timestamp" && key !== "board"
+      );
 
-        const attributeNames = Object.keys(data).filter(
-          key => key !== "timestamp" && key !== "board"
-        );
+      const attributes = [
+        { name: "timestamp", title: "Carimbo de Tempo", type: "date" },
+        { name: "board", title: "Protótipo", type: "categorical" },
+        ...attributeNames.map(name => ({
+          name,
+          title: name.charAt(0).toUpperCase() + name.slice(1),
+          type: "numeric"
+        }))
+      ];
 
-        const attributes = [
-          { name: "timestamp", title: "Carimbo de Tempo", type: "date" },
-          { name: "board", title: "Protótipo", type: "categorical" },
-          ...attributeNames.map(name => ({
-            name: name,
-            title: name.charAt(0).toUpperCase() + name.slice(1),
-            type: "numeric"
-          }))
-        ];
-
-        codapInterface.sendRequest({
-          action: "create",
-          resource: "dataContext",
-          values: {
-            name: "GoGoBoard",
-            collections: [
-              { name: "Dados Sensores", attrs: attributes }
-            ]
-          }
-        }).then(() => {
-          dataContextCreated = true;
-          sendCaseToCODAP(data);
-        });
-
-      } else if (dataContextCreated) {
+      codapInterface.sendRequest({
+        action: "create",
+        resource: "dataContext",
+        values: {
+          name: "GoGoBoard",
+          collections: [{ name: "Dados Sensores", attrs: attributes }]
+        }
+      }).then(() => {
+        dataContextCreated = true;
         sendCaseToCODAP(data);
-      }
-
-    } catch (e) {
-      console.warn("⚠️ Erro ao enviar dados ao CODAP:", e);
+      });
+    } else {
+      sendCaseToCODAP(data);
     }
   }
 
-  // --- Conexão MQTT ---
+  // --- MQTT ---
   function connectMQTT() {
     client = mqtt.connect(mqttBroker, options);
 
     updateStatus("Conectando ao broker...");
 
     client.on("connect", () => {
-      console.log("✅ Conectado ao HiveMQ Cloud");
       updateStatus("Conectado. Aguardando dados...");
       client.subscribe(topic);
     });
 
     client.on("message", (topic, message) => {
+      if (!collecting) return;
+
       const payload = message.toString().trim();
       const parts = topic.split("/");
-
       const boardName = parts[2];
       const sensorName = parts[3];
 
       if (!boardName || !sensorName || !boardName.startsWith("GoGo-")) return;
+      if (boardName !== boardSelect.value) return;
 
-      const valueMatch = payload.match(/=([\d.]+)/);
-      const value = valueMatch ? parseFloat(valueMatch[1]) : null;
+      const match = payload.match(/=([\d.]+)/);
+      if (!match) return;
 
-      if (value === null || !collecting) return;
-
-      const selectedBoard = boardSelect.value;
-      if (!selectedBoard || boardName !== selectedBoard) return;
+      const value = parseFloat(match[1]);
 
       if (!dataBuffer[boardName]) dataBuffer[boardName] = {};
       dataBuffer[boardName][sensorName] = value;
 
-      if (sendTimer[boardName]) clearTimeout(sendTimer[boardName]);
+      clearTimeout(sendTimer[boardName]);
 
       sendTimer[boardName] = setTimeout(() => {
-
         const caseObj = {
           timestamp: new Date().toISOString(),
-          board: boardAliases[boardName] || boardName,
+          board: boardName,
           ...dataBuffer[boardName]
         };
 
@@ -187,42 +173,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         updateStatus("Coleta ativa...");
 
         delete dataBuffer[boardName];
-        delete sendTimer[boardName];
-
       }, 60);
-    });
-
-    client.on("error", err => {
-      console.error("❌ Erro MQTT:", err);
-      updateStatus("Erro na conexão MQTT");
-    });
-
-    client.on("close", () => {
-      updateStatus("Desconectado do broker");
     });
   }
 
   // --- Botões ---
-  startBtn.addEventListener("click", () => {
-    const selectedBoard = boardSelect.value;
-
-    if (!selectedBoard) {
-      updateStatus("Selecione uma placa antes de iniciar a coleta.");
-      return;
-    }
-
-    collecting = true;
-    updateStatus("Coleta iniciada...");
-  });
-
-  stopBtn.addEventListener("click", () => {
-    collecting = false;
-    updateStatus("Coleta pausada.");
-  });
-
-  // --- Inicialização ---
-  updateStatus("Aguardando conexão...");
-  connectMQTT();
+    startBtn.addEventListener("click", () => {
+      if (!boardSelect.value) {
+        updateStatus("Selecione uma placa antes de iniciar a coleta.");
+        return;
+      }
+      collecting = true;
+      updateStatus("Coleta iniciada...");
+    });
   
-
-});
+    stopBtn.addEventListener("click", () => {
+      collecting = false;
+      updateStatus("Coleta parada.");
+    });
+  
+    connectMQTT();
+  });
