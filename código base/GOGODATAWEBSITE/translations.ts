@@ -1,33 +1,22 @@
 
 import { TranslationContent } from './types';
 
-export const translations: Record<'pt' | 'en', TranslationContent> = {
+export const translations: Record<'pt' | 'en', any> = {
   pt: {
     nav: {
       home: 'Início',
       about: 'Sobre',
       activities: 'Atividades',
       tools: 'Ferramentas',
-      docs: 'Depoimentos',
+      docs: 'Documentação',
       team: 'Equipe',
       contact: 'Contato'
     },
     home: {
-      tag: 'Iniciativa GRECO - UFRJ',
       heroTitle: 'GoGoData',
       heroSub: 'Letramento de dados em tempo real para transformar a educação.',
       cta: 'Ver Atividades',
-      coreMessage: 'Entendemos os dados como um meio potente de comunicação, interpretação e criação. Nossa missão é capacitar estudantes a lerem o mundo através de evidências concretas.',
-      activeLearningTitle: 'Aprendizagem Ativa com Dados',
-      activeLearningDesc: 'Investigação constante via hardware aberto, conectando estudantes aos anos finais do Ensino Fundamental com a realidade científica digital.',
-      features: {
-        age: '13-14 Anos',
-        bloom: 'Bloom Digital',
-        board: 'GoGo Board',
-        sensors: 'Sensores Reais',
-        interpretation: 'Interpretação',
-        communication: 'Comunicação'
-      }
+      coreMessage: 'Entendemos os dados como um meio potente de comunicação, interpretação e criação. Nossa missão é capacitar estudantes a lerem o mundo através de evidências concretas.'
     },
     about: {
       title: 'Sobre o Projeto',
@@ -46,13 +35,6 @@ export const translations: Record<'pt' | 'en', TranslationContent> = {
       durationLabel: 'Duração',
       levelLabel: 'Foco Cognitivo',
       knowMore: 'Ver Detalhes',
-      objectivesTitle: 'Objetivos',
-      overviewTitle: 'Visão Geral',
-      stepsTitle: 'Etapas',
-      hardwareTitle: 'Hardware & Sensores',
-      hardwareDesc: 'GoGo Board v6 + Sensores de som/temp/umidade conforme atividade.',
-      analysisTitle: 'Análise Digital',
-      analysisDesc: 'Visualização exploratória via CODAP (Common Online Data Analysis Platform).',
       items: [
         {
           id: 'data-detectives',
@@ -106,7 +88,7 @@ export const translations: Record<'pt' | 'en', TranslationContent> = {
           name: 'GoGo Board',
           coleta: 'Hardware de baixo custo que permite a conexão simultânea de diversos sensores para monitoramento contínuo.',
           analise: 'Processamento imediato de sinais analógicos em informações digitais para visualização dinâmica.',
-          comunicacao: 'Facilitata a interação direta do estudante com o ambiente físico através de uma interface eletrônica compreensível.'
+          comunicacao: 'Facilita a interação direta do estudante com o ambiente físico através de uma interface eletrônica compreensível.'
         },
         {
           id: 'sensores',
@@ -125,20 +107,13 @@ export const translations: Record<'pt' | 'en', TranslationContent> = {
       ]
     },
     docs: {
-      title: 'Depoimentos',
+      title: 'Documentação',
       teachers: 'Vozes dos Professores',
       students: 'Vozes dos Estudantes',
-      teacherQuote: '"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."',
-      studentQuote: '"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation."',
       videos: 'Vídeos'
     },
     team: {
-      title: 'Nossa Equipe',
-      roles: {
-        pi: 'Pesquisador Principal',
-        advisor: 'Orientadora',
-        coadvisor: 'Coorientadora'
-      }
+      title: 'Nossa Equipe'
     },
     contact: {
       title: 'Contato',
@@ -151,51 +126,33 @@ export const translations: Record<'pt' | 'en', TranslationContent> = {
       about: 'About',
       activities: 'Activities',
       tools: 'Tools',
-      docs: 'Testimonials',
+      docs: 'Documentation',
       team: 'Team',
       contact: 'Contact'
     },
     home: {
-      tag: 'GRECO - UFRJ Initiative',
       heroTitle: 'GoGoData',
       heroSub: 'Real-time data literacy to transform education.',
       cta: 'View Activities',
-      coreMessage: 'We see data as a powerful medium for communication, interpretation, and creation. Our mission is to empower students to read the world through evidence.',
-      activeLearningTitle: 'Active Learning with Data',
-      activeLearningDesc: 'Constant investigation via open hardware, connecting students in the final years of Middle School with digital scientific reality.',
-      features: {
-        age: '13-14 Years',
-        bloom: 'Digital Bloom',
-        board: 'GoGo Board',
-        sensors: 'Real Sensors',
-        interpretation: 'Interpretation',
-        communication: 'Communication'
-      }
+      coreMessage: 'We see data as a powerful medium for communication, interpretation, and creation. Our mission is to empower students to read the world through evidence.'
     },
     about: {
-      title: 'About the Project',
-      description: 'GoGoData is an initiative developed by GRECO UFRJ, with support from Columbia University (TLTL) and Chiang Mai University (TLIC). We focus on implementing data literacy practices in school contexts.',
+      title: 'About',
+      description: 'GoGoData is an initiative by GRECO UFRJ, supported by Columbia (TLTL) and CMU (TLIC). We focus on data literacy in school contexts.',
       focusTitle: 'Educational Focus',
-      focusDesc: 'Developing critical and scientific thinking through real data and sensors, enabling informed decisions.',
+      focusDesc: 'Developing critical and scientific thinking through real data and sensors.',
       bloomTitle: 'Bloom\'s Digital Taxonomy',
       bloomDesc: 'A progression guiding students from basic understanding to complex analysis and evidence-based creation.',
       realTimeTitle: 'Real-Time Data',
-      realTimeDesc: 'Working with live data and sensors makes investigative learning tangible and relevant to the school context.'
+      realTimeDesc: 'Working with live data and sensors makes investigative learning tangible.'
     },
     activities: {
       title: 'Activities',
-      subtitle: 'Developed exclusively for students aged 13 and 14 (Middle School).',
+      subtitle: 'Developed for students aged 13 and 14 (Middle School).',
       targetAge: '13-14 years',
       durationLabel: 'Duration',
       levelLabel: 'Cognitive Focus',
       knowMore: 'Details',
-      objectivesTitle: 'Objectives',
-      overviewTitle: 'Overview',
-      stepsTitle: 'Steps',
-      hardwareTitle: 'Hardware & Sensors',
-      hardwareDesc: 'GoGo Board v6 + Sensors (sound/temp/humidity) as per activity.',
-      analysisTitle: 'Digital Analysis',
-      analysisDesc: 'Exploratory visualization via CODAP (Common Online Data Analysis Platform).',
       items: [
         {
           id: 'data-detectives',
@@ -203,13 +160,13 @@ export const translations: Record<'pt' | 'en', TranslationContent> = {
           desc: 'Investigating sound levels in the school environment using real-time sensors.',
           duration: '2 classes (50 min each)',
           level: 'Analyze and Interpret',
-          objectives: ['Understand data collection', 'Analyze environmental datasets', 'Formulate empirical conclusions'],
+          objectives: ['Understand data collection', 'Analyze environmental sets', 'Formulate empirical conclusions'],
           steps: ['Sensor calibration', 'Multi-space collection', 'Hypothesis discussion']
         },
         {
           id: 'sound-mapping',
           title: 'Sound Mapping',
-          desc: 'Collecting sound levels in different locations and comparative analysis in CODAP.',
+          desc: 'Collecting sound levels in various locations and comparative analysis in CODAP.',
           duration: '2 classes (50 min each)',
           level: 'Analyze and Communicate',
           objectives: ['Relate spaces to values', 'Compare datasets', 'Communicate via graphs'],
@@ -247,45 +204,38 @@ export const translations: Record<'pt' | 'en', TranslationContent> = {
         {
           id: 'gogoboard',
           name: 'GoGo Board',
-          coleta: 'Low-cost hardware allowing simultaneous connection of various sensors for continuous monitoring.',
-          analise: 'Immediate processing of analog signals into digital info for dynamic visualization.',
-          comunicacao: 'Facilitates direct student interaction with physical environment through a clear interface.'
+          coleta: 'Low-cost hardware that allows simultaneous connection of various sensors for continuous monitoring.',
+          analise: 'Immediate processing of analog signals into digital information for dynamic visualization.',
+          comunicacao: 'Facilitates direct student interaction with the physical environment through an understandable electronic interface.'
         },
         {
           id: 'sensores',
           name: 'Sensors',
-          coleta: 'Precise capture of physical phenomena (light, sound, temp, humidity) into data streams.',
-          analise: 'Provides quantitative basis for identifying patterns and variations in school environment.',
-          comunicacao: 'Translates invisible variations into numerical representations for critical analysis.'
+          coleta: 'Precise capture of physical phenomena (light, sound, temperature, humidity) transforming them into data streams.',
+          analise: 'Provide the quantitative basis necessary for identifying patterns and variations in the school environment.',
+          comunicacao: 'Translate invisible environmental variations into numerical representations ready for critical analysis.'
         },
         {
           id: 'codap',
           name: 'CODAP',
-          coleta: 'Platform for dynamically importing and organizing data streams for immediate exploration.',
-          analise: 'Visual drag-and-drop environment for graphs, tables, and statistical correlations.',
-          comunicacao: 'Allows students to build powerful visualizations to justify conclusions and share findings.'
+          coleta: 'Platform that receives and organizes dynamically imported data streams for immediate exploration.',
+          analise: 'Visual drag-and-drop environment for creating graphs, tables, and exploring statistical correlations.',
+          comunicacao: 'Allows students to build powerful visualizations to justify their conclusions and share discoveries.'
         }
       ]
     },
     docs: {
-      title: 'Testimonials',
+      title: 'Documentation',
       teachers: 'Teacher Voices',
       students: 'Student Voices',
-      teacherQuote: '"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."',
-      studentQuote: '"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation."',
       videos: 'Videos'
     },
     team: {
-      title: 'Our Team',
-      roles: {
-        pi: 'Principal Researcher',
-        advisor: 'Advisor',
-        coadvisor: 'Co-advisor'
-      }
+      title: 'Team'
     },
     contact: {
       title: 'Contact',
-      subtitle: 'Get in touch with us via email.'
+      subtitle: 'Reach out to us via email.'
     }
   }
 };
