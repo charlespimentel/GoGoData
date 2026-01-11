@@ -164,8 +164,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       sendTimer[boardName] = setTimeout(() => {
         const caseObj = {
           timestamp: new Date().toISOString(),
-          board_id: boardName,
-          board_name: boardAliases[boardName] || boardName,
+          board: boardAliases[boardName] || boardName,
           ...dataBuffer[boardName]
         };
 
